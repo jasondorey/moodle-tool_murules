@@ -147,15 +147,59 @@ final class rule {
      */
     public static function get_actions(int $ruleid): array {
         global $DB;
-        return $DB->get_records('tool_murules_action', ['ruleid' => $ruleid], 'sortorder ASC, id ASC');
+        return array_values($DB->get_records(
+            'tool_murules_action',
+            ['ruleid' => $ruleid],
+            'sortorder ASC, id ASC'
+        ));
     }
 
     /**
-     * Create or update a rule with AND conditions + a single action (Wave A).
+     * Decoded action list for a rule.
+     *
+     * @param int $ruleid
+     * @return array<int,array{actiontype:string,actionconfig:array,id?:int}>
+     */
+    public static function get_actions_decoded(int $ruleid): array {
+        $out = [];
+        foreach (self::get_actions($ruleid) as $row) {
+            $out[] = [
+                'id' => (int)$row->id,
+                'actiontype' => (string)$row->actiontype,
+                'actionconfig' => action\base::decode_config($row->actionconfig ?? null),
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * Human THEN summary (actions joined with "; ").
+     *
+     * @param stdClass $rulerec
+     * @return string
+     */
+    public static function format_then(stdClass $rulerec): string {
+        $parts = [];
+        foreach (self::get_actions((int)$rulerec->id) as $actionrec) {
+            $action = registry::get_action($actionrec->actiontype);
+            if ($action) {
+                $parts[] = $action->get_description(
+                    action\base::decode_config($actionrec->actionconfig ?? null)
+                );
+            } else {
+                $parts[] = $actionrec->actiontype;
+            }
+        }
+        return $parts ? implode('; ', $parts) : '';
+    }
+
+    /**
+     * Create or update a rule with AND conditions + one or more THEN actions.
      *
      * @param stdClass $data name, enabled, actionlimit, includesuspended,
-     *                       conditions[] (conditiontype + conditionconfig) OR legacy conditiontype/config,
-     *                       actiontype, actionconfig, timestart?, timeend?, id?
+     *                       conditions[] OR legacy conditiontype/config,
+     *                       actions[] OR legacy actiontype/actionconfig,
+     *                       timestart?, timeend?, id?
      * @return int rule id
      */
     public static function save(stdClass $data): int {
@@ -166,11 +210,12 @@ final class rule {
         if (!$conditions) {
             throw new \moodle_exception('error_condition', 'tool_murules');
         }
+        $actions = self::normalize_actions_input($data);
+        if (!$actions) {
+            throw new \moodle_exception('error_action', 'tool_murules');
+        }
         $primary = $conditions[0];
         $conditionconfig = json_encode($primary['conditionconfig']);
-        $actionconfig = is_array($data->actionconfig ?? null)
-            ? json_encode($data->actionconfig)
-            : (string)($data->actionconfig ?? '{}');
 
         $wasenabled = false;
         $trans = $DB->start_delegated_transaction();
@@ -193,22 +238,6 @@ final class rule {
             $record->usermodified = (int)$USER->id;
             $DB->update_record('tool_murules_rule', $record);
             $ruleid = (int)$record->id;
-
-            $actions = self::get_actions($ruleid);
-            $action = reset($actions);
-            if ($action) {
-                $action->actiontype = (string)$data->actiontype;
-                $action->actionconfig = $actionconfig;
-                $action->sortorder = 0;
-                $DB->update_record('tool_murules_action', $action);
-            } else {
-                $DB->insert_record('tool_murules_action', (object)[
-                    'ruleid' => $ruleid,
-                    'sortorder' => 0,
-                    'actiontype' => (string)$data->actiontype,
-                    'actionconfig' => $actionconfig,
-                ]);
-            }
         } else {
             $record = (object)[
                 'name' => (string)$data->name,
@@ -226,15 +255,10 @@ final class rule {
                 'usermodified' => (int)$USER->id,
             ];
             $ruleid = (int)$DB->insert_record('tool_murules_rule', $record);
-            $DB->insert_record('tool_murules_action', (object)[
-                'ruleid' => $ruleid,
-                'sortorder' => 0,
-                'actiontype' => (string)$data->actiontype,
-                'actionconfig' => $actionconfig,
-            ]);
         }
 
         self::replace_conditions($ruleid, $conditions);
+        self::replace_actions($ruleid, $actions);
 
         $trans->allow_commit();
 
@@ -264,6 +288,51 @@ final class rule {
                 'conditiontype' => (string)$cond['conditiontype'],
                 'conditionconfig' => is_array($config) ? json_encode($config) : (string)$config,
             ]);
+        }
+    }
+
+    /**
+     * Replace THEN actions, preserving row ids where possible for match-log FKs.
+     *
+     * @param int $ruleid
+     * @param array $actions
+     */
+    public static function replace_actions(int $ruleid, array $actions): void {
+        global $DB;
+        $existing = self::get_actions($ruleid);
+        $keptids = [];
+        $sort = 0;
+        foreach ($actions as $act) {
+            $config = $act['actionconfig'] ?? [];
+            $encoded = is_array($config) ? json_encode($config) : (string)$config;
+            if (isset($existing[$sort])) {
+                $row = $existing[$sort];
+                $row->actiontype = (string)$act['actiontype'];
+                $row->actionconfig = $encoded;
+                $row->sortorder = $sort;
+                $DB->update_record('tool_murules_action', $row);
+                $keptids[] = (int)$row->id;
+            } else {
+                $newid = (int)$DB->insert_record('tool_murules_action', (object)[
+                    'ruleid' => $ruleid,
+                    'sortorder' => $sort,
+                    'actiontype' => (string)$act['actiontype'],
+                    'actionconfig' => $encoded,
+                ]);
+                $keptids[] = $newid;
+            }
+            $sort++;
+        }
+        $primaryactionid = $keptids[0] ?? 0;
+        foreach ($existing as $idx => $row) {
+            if ($idx < $sort) {
+                continue;
+            }
+            $oldid = (int)$row->id;
+            if ($primaryactionid && $DB->record_exists('tool_murules_match', ['actionid' => $oldid])) {
+                $DB->set_field('tool_murules_match', 'actionid', $primaryactionid, ['actionid' => $oldid]);
+            }
+            $DB->delete_records('tool_murules_action', ['id' => $oldid]);
         }
     }
 
@@ -302,6 +371,46 @@ final class rule {
             return [[
                 'conditiontype' => (string)$data->conditiontype,
                 'conditionconfig' => is_array($config) ? $config : [],
+            ]];
+        }
+        return [];
+    }
+
+    /**
+     * @param stdClass $data
+     * @return array<int,array{actiontype:string,actionconfig:array}>
+     */
+    protected static function normalize_actions_input(stdClass $data): array {
+        $out = [];
+        if (!empty($data->actions) && is_array($data->actions)) {
+            foreach ($data->actions as $act) {
+                if (is_object($act)) {
+                    $act = (array)$act;
+                }
+                if (empty($act['actiontype'])) {
+                    continue;
+                }
+                $config = $act['actionconfig'] ?? [];
+                if (is_string($config)) {
+                    $config = action\base::decode_config($config);
+                }
+                $out[] = [
+                    'actiontype' => (string)$act['actiontype'],
+                    'actionconfig' => is_array($config) ? $config : [],
+                ];
+            }
+        }
+        if ($out) {
+            return $out;
+        }
+        if (!empty($data->actiontype)) {
+            $config = $data->actionconfig ?? [];
+            if (is_string($config)) {
+                $config = action\base::decode_config($config);
+            }
+            return [[
+                'actiontype' => (string)$data->actiontype,
+                'actionconfig' => is_array($config) ? $config : [],
             ]];
         }
         return [];

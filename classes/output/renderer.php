@@ -71,17 +71,10 @@ class renderer extends plugin_renderer_base {
             $enabled = (int)$rec->enabled === 1;
             $when = rule::format_when($rec);
 
-            $actions = rule::get_actions((int)$rec->id);
             $thenparts = [];
-            foreach ($actions as $actionrec) {
-                $action = registry::get_action($actionrec->actiontype);
-                if ($action) {
-                    $thenparts[] = $action->get_description(
-                        \tool_murules\local\action\base::decode_config($actionrec->actionconfig)
-                    );
-                } else {
-                    $thenparts[] = $actionrec->actiontype;
-                }
+            $then = rule::format_then($rec);
+            if ($then !== '') {
+                $thenparts[] = $then;
             }
             $stats = rule::get_match_stats((int)$rec->id);
             $statstotal = (int)$stats['applied'] + (int)$stats['skipped'] + (int)$stats['failed'];
@@ -93,7 +86,7 @@ class renderer extends plugin_renderer_base {
                 'enabled' => $enabled,
                 'broken' => $broken,
                 'when' => $when,
-                'then' => implode('; ', $thenparts),
+                'then' => $thenparts ? $thenparts[0] : '',
                 'stats' => $statstotal > 0
                     ? get_string('matchstats', 'tool_murules', (object)$stats)
                     : get_string('matchstats_none', 'tool_murules'),

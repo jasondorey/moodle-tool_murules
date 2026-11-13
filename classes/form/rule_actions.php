@@ -34,6 +34,7 @@ class rule_actions extends \moodleform {
         $custom = $this->_customdata;
         $actiontype = (string)($custom['actiontype'] ?? 'allocate_muprog');
         $actionconfig = $custom['actionconfig'] ?? [];
+        $hasactions = !empty($custom['hasactions']);
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -56,21 +57,30 @@ class rule_actions extends \moodleform {
             $action->add_config_form_elements($mform, $actionconfig);
         }
 
-        $this->add_wizard_buttons(
-            get_string('saveandcontinue', 'tool_murules'),
-            get_string('back', 'tool_murules')
-        );
+        $this->add_wizard_buttons($hasactions);
     }
 
     /**
-     * @param string $submitlabel
-     * @param string $cancellabel
+     * @param bool $hasactions
      */
-    protected function add_wizard_buttons(string $submitlabel, string $cancellabel): void {
+    protected function add_wizard_buttons(bool $hasactions): void {
         $mform = $this->_form;
         $buttonarray = [];
-        $buttonarray[] = $mform->createElement('submit', 'submitbutton', $submitlabel);
-        $buttonarray[] = $mform->createElement('cancel', 'cancel', $cancellabel);
+        $buttonarray[] = $mform->createElement(
+            'submit',
+            'submitbutton',
+            $hasactions
+                ? get_string('addanotheraction', 'tool_murules')
+                : get_string('saveandcontinue', 'tool_murules')
+        );
+        if (!$hasactions) {
+            $buttonarray[] = $mform->createElement(
+                'submit',
+                'addanother',
+                get_string('addanotheraction', 'tool_murules')
+            );
+        }
+        $buttonarray[] = $mform->createElement('cancel', 'cancel', get_string('back', 'tool_murules'));
         $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');
     }

@@ -71,18 +71,9 @@ if ($action && $id) {
             );
         }
         $when = \tool_murules\local\rule::format_when($rulerec);
-        $thenparts = [];
-        foreach (\tool_murules\local\rule::get_actions((int)$rulerec->id) as $actionrec) {
-            $action = \tool_murules\local\registry::get_action($actionrec->actiontype);
-            if ($action) {
-                $thenparts[] = $action->get_description(
-                    \tool_murules\local\action\base::decode_config($actionrec->actionconfig)
-                );
-            } else {
-                $thenparts[] = $actionrec->actiontype;
-            }
-        }
-        $then = $thenparts ? implode('; ', $thenparts) : '—';
+        $then = \tool_murules\local\rule::format_then($rulerec);
+        if ($then === '') {
+            $then = '—';
         $confirmmsg = get_string('deleteruleconfirm', 'tool_murules', (object)[
             'name' => format_string($rulerec->name),
         ]);

@@ -210,5 +210,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111336, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111337) {
+        // Multi-action wizard UI (engine already supported multiple THEN actions).
+        upgrade_plugin_savepoint(true, 2026111337, 'tool', 'murules');
+    }
+
     return true;
 }
