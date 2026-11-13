@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111318;
+$plugin->version   = 2026111319;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.3.16-showingLabel';
+$plugin->release   = '0.3.17-wizardButtons';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,

@@ -56,7 +56,23 @@ class rule_actions extends \moodleform {
             $action->add_config_form_elements($mform, $actionconfig);
         }
 
-        $this->add_action_buttons(true, get_string('saveandcontinue', 'tool_murules'));
+        $this->add_wizard_buttons(
+            get_string('saveandcontinue', 'tool_murules'),
+            get_string('back', 'tool_murules')
+        );
+    }
+
+    /**
+     * @param string $submitlabel
+     * @param string $cancellabel
+     */
+    protected function add_wizard_buttons(string $submitlabel, string $cancellabel): void {
+        $mform = $this->_form;
+        $buttonarray = [];
+        $buttonarray[] = $mform->createElement('submit', 'submitbutton', $submitlabel);
+        $buttonarray[] = $mform->createElement('cancel', 'cancel', $cancellabel);
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
+        $mform->closeHeaderBefore('buttonar');
     }
 
     public function validation($data, $files): array {

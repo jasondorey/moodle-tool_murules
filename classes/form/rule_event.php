@@ -70,7 +70,25 @@ class rule_event extends \moodleform {
             }
         }
 
-        $this->add_action_buttons(true, get_string('saveandcontinue', 'tool_murules'));
+        $this->add_wizard_buttons(
+            get_string('saveandcontinue', 'tool_murules'),
+            get_string('cancelwizard', 'tool_murules')
+        );
+    }
+
+    /**
+     * Submit + cancel with custom labels (Cancel leaves the wizard).
+     *
+     * @param string $submitlabel
+     * @param string $cancellabel
+     */
+    protected function add_wizard_buttons(string $submitlabel, string $cancellabel): void {
+        $mform = $this->_form;
+        $buttonarray = [];
+        $buttonarray[] = $mform->createElement('submit', 'submitbutton', $submitlabel);
+        $buttonarray[] = $mform->createElement('cancel', 'cancel', $cancellabel);
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
+        $mform->closeHeaderBefore('buttonar');
     }
 
     public function validation($data, $files): array {

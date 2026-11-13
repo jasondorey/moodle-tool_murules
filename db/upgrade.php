@@ -102,5 +102,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Overview "Showing:" label for active filter/search.
         upgrade_plugin_savepoint(true, 2026111318, 'tool', 'murules');
     }
+    if ($oldversion < 2026111319) {
+        // Wizard Cancel vs Back button labels.
+        upgrade_plugin_savepoint(true, 2026111319, 'tool', 'murules');
+    }
     return true;
 }
