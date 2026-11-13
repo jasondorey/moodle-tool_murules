@@ -31,6 +31,7 @@ require_capability('tool/murules:manage', context_system::instance());
 
 $id = required_param('id', PARAM_INT);
 $statusfilter = optional_param('status', 'all', PARAM_ALPHA);
+$download = optional_param('download', '', PARAM_ALPHA);
 $allowedstatus = ['all', 'applied', 'skipped', 'failed'];
 if (!in_array($statusfilter, $allowedstatus, true)) {
     $statusfilter = 'all';
@@ -46,9 +47,51 @@ $PAGE->set_title(get_string('rulelog', 'tool_murules'));
 $PAGE->set_heading(format_string($rulerec->name) . ' — ' . get_string('rulelog', 'tool_murules'));
 $PAGE->navbar->add(format_string($rulerec->name));
 
+$params = ['ruleid' => $id];
+$wheresql = 'ruleid = :ruleid';
+if ($statusfilter !== 'all') {
+    $wheresql .= ' AND status = :status';
+    $params['status'] = $statusfilter;
+}
+
+if ($download === 'csv') {
+    require_sesskey();
+    $csvrecords = $DB->get_records_select(
+        'tool_murules_match',
+        $wheresql,
+        $params,
+        'timecreated DESC, id DESC',
+        '*',
+        0,
+        10000
+    );
+    $filename = clean_filename(get_string('log_export_filename', 'tool_murules', $id)) . '.csv';
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Pragma: no-cache');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['time', 'userid', 'email', 'fullname', 'status', 'reason', 'muprogallocationid']);
+    foreach ($csvrecords as $rec) {
+        $user = $DB->get_record('user', ['id' => $rec->userid], 'id, email, deleted, firstname, lastname', IGNORE_MISSING);
+        $email = $user && !(int)$user->deleted ? $user->email : '';
+        $fullname = $user ? fullname($user) : '';
+        fputcsv($out, [
+            userdate($rec->timecreated, '%Y-%m-%d %H:%M:%S'),
+            (int)$rec->userid,
+            $email,
+            $fullname,
+            $rec->status,
+            (string)$rec->reason,
+            $rec->muprogallocationid ? (string)$rec->muprogallocationid : '',
+        ]);
+    }
+    fclose($out);
+    exit;
+}
+
 echo $OUTPUT->header();
 echo html_writer::div(
-    html_writer::link(new moodle_url('/admin/tool/murules/index.php'), get_string('back', 'tool_murules'), [
+    html_writer::link(new moodle_url('/admin/tool/murules/index.php'), get_string('backtorules', 'tool_murules'), [
         'class' => 'btn btn-link btn-sm px-0',
     ]) .
     ' · ' .
@@ -110,12 +153,6 @@ if ($statusfilter !== 'all') {
     );
 }
 
-$params = ['ruleid' => $id];
-$wheresql = 'ruleid = :ruleid';
-if ($statusfilter !== 'all') {
-    $wheresql .= ' AND status = :status';
-    $params['status'] = $statusfilter;
-}
 $total = (int)$DB->count_records_select('tool_murules_match', $wheresql, $params);
 if (!$total) {
     echo html_writer::div(
@@ -175,13 +212,23 @@ foreach ($records as $rec) {
     ];
 }
 
-echo html_writer::tag(
-    'p',
-    get_string('log_resultcount', 'tool_murules', (object)[
-        'shown' => count($records),
-        'total' => $total,
-    ]),
-    ['class' => 'tool_murules-log-count text-muted']
+$exportparams = array_merge($urlparams, ['download' => 'csv', 'sesskey' => sesskey()]);
+echo html_writer::div(
+    html_writer::tag(
+        'span',
+        get_string('log_resultcount', 'tool_murules', (object)[
+            'shown' => count($records),
+            'total' => $total,
+        ]),
+        ['class' => 'tool_murules-log-count text-muted']
+    ) .
+    ' ' .
+    html_writer::link(
+        new moodle_url('/admin/tool/murules/log.php', $exportparams),
+        get_string('log_export_csv', 'tool_murules'),
+        ['class' => 'btn btn-secondary btn-sm']
+    ),
+    'tool_murules-log-toolbar mb-2 d-flex flex-wrap align-items-center justify-content-between gap-2'
 );
 echo html_writer::table($table);
 echo $OUTPUT->paging_bar($total, $page, $perpage, $PAGE->url);

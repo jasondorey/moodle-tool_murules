@@ -118,5 +118,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Overview "Showing N of M rules" count line.
         upgrade_plugin_savepoint(true, 2026111322, 'tool', 'murules');
     }
+    if ($oldversion < 2026111323) {
+        // Log CSV export + Back to rules nav label.
+        upgrade_plugin_savepoint(true, 2026111323, 'tool', 'murules');
+    }
     return true;
 }
