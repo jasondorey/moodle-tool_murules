@@ -150,5 +150,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Search autofocus when query present + hint for screen readers.
         upgrade_plugin_savepoint(true, 2026111330, 'tool', 'murules');
     }
+    if ($oldversion < 2026111331) {
+        // Sticky log table header inside scroll region.
+        upgrade_plugin_savepoint(true, 2026111331, 'tool', 'murules');
+    }
     return true;
 }

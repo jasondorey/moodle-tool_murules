@@ -230,6 +230,6 @@ echo html_writer::div(
     ),
     'tool_murules-log-toolbar mb-2 d-flex flex-wrap align-items-center justify-content-between gap-2'
 );
-echo html_writer::table($table);
+echo html_writer::div(html_writer::table($table), 'tool_murules-log-scroll');
 echo $OUTPUT->paging_bar($total, $page, $perpage, $PAGE->url);
 echo $OUTPUT->footer();
