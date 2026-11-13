@@ -31,11 +31,18 @@ require_capability('tool/murules:manage', context_system::instance());
 $action = optional_param('action', '', PARAM_ALPHA);
 $id = optional_param('id', 0, PARAM_INT);
 $filter = optional_param('filter', 'all', PARAM_ALPHA);
+$query = trim(optional_param('q', '', PARAM_TEXT));
 $allowedfilters = ['all', 'enabled', 'disabled', 'broken'];
 if (!in_array($filter, $allowedfilters, true)) {
     $filter = 'all';
 }
-$returnparams = $filter === 'all' ? [] : ['filter' => $filter];
+$returnparams = [];
+if ($filter !== 'all') {
+    $returnparams['filter'] = $filter;
+}
+if ($query !== '') {
+    $returnparams['q'] = $query;
+}
 
 if ($action && $id) {
     require_sesskey();
@@ -53,13 +60,12 @@ if ($action && $id) {
         echo $OUTPUT->header();
         echo $OUTPUT->confirm(
             get_string('deleteruleconfirm', 'tool_murules', format_string($rulerec->name)),
-            new moodle_url('/admin/tool/murules/index.php', [
+            new moodle_url('/admin/tool/murules/index.php', array_merge($returnparams, [
                 'action' => 'delete',
                 'id' => $id,
                 'confirm' => 1,
                 'sesskey' => sesskey(),
-                'filter' => $filter,
-            ]),
+            ])),
             new moodle_url('/admin/tool/murules/index.php', $returnparams)
         );
         echo $OUTPUT->footer();
@@ -76,5 +82,5 @@ $renderer = $PAGE->get_renderer('tool_murules');
 
 echo $OUTPUT->header();
 echo html_writer::tag('p', get_string('rulesoverview_help', 'tool_murules'), ['class' => 'tool_murules-lead text-muted']);
-echo $renderer->rule_cards($filter);
+echo $renderer->rule_cards($filter, $query);
 echo $OUTPUT->footer();

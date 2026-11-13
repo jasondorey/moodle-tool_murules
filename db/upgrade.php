@@ -90,5 +90,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Overview banner when realtime observers are disabled.
         upgrade_plugin_savepoint(true, 2026111315, 'tool', 'murules');
     }
+    if ($oldversion < 2026111316) {
+        // Overview name search.
+        upgrade_plugin_savepoint(true, 2026111316, 'tool', 'murules');
+    }
     return true;
 }

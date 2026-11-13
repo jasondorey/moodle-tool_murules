@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111315;
+$plugin->version   = 2026111316;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.3.13-observersBanner';
+$plugin->release   = '0.3.14-nameSearch';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,

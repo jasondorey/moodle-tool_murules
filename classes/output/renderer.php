@@ -34,14 +34,22 @@ class renderer extends plugin_renderer_base {
      * Overview cards.
      *
      * @param string $filter all|enabled|disabled|broken
+     * @param string $query Case-insensitive name substring
      * @return string
      */
-    public function rule_cards(string $filter = 'all'): string {
+    public function rule_cards(string $filter = 'all', string $query = ''): string {
         $allowed = ['all', 'enabled', 'disabled', 'broken'];
         if (!in_array($filter, $allowed, true)) {
             $filter = 'all';
         }
-        $filterparams = $filter === 'all' ? [] : ['filter' => $filter];
+        $query = trim($query);
+        $filterparams = [];
+        if ($filter !== 'all') {
+            $filterparams['filter'] = $filter;
+        }
+        if ($query !== '') {
+            $filterparams['q'] = $query;
+        }
 
         $all = [];
         $counts = ['all' => 0, 'enabled' => 0, 'disabled' => 0, 'broken' => 0];
@@ -67,6 +75,7 @@ class renderer extends plugin_renderer_base {
             $stats = rule::get_match_stats((int)$rec->id);
             $card = [
                 'name' => format_string($rec->name),
+                'nametext' => \core_text::strtolower((string)$rec->name),
                 'enabled' => $enabled,
                 'broken' => $broken,
                 'when' => $when,
@@ -97,27 +106,41 @@ class renderer extends plugin_renderer_base {
             }
         }
 
-        $rules = array_values(array_filter($all, static function(array $card) use ($filter): bool {
-            return match ($filter) {
+        $querylower = $query !== '' ? \core_text::strtolower($query) : '';
+        $rules = array_values(array_filter($all, static function(array $card) use ($filter, $querylower): bool {
+            $statusok = match ($filter) {
                 'enabled' => $card['enabled'],
                 'disabled' => !$card['enabled'],
                 'broken' => $card['broken'],
                 default => true,
             };
+            if (!$statusok) {
+                return false;
+            }
+            if ($querylower === '') {
+                return true;
+            }
+            return \core_text::strpos($card['nametext'], $querylower) !== false;
         }));
 
+        $queryparams = $query !== '' ? ['q' => $query] : [];
         $filters = [];
         foreach ($allowed as $key) {
+            $params = $queryparams;
+            if ($key !== 'all') {
+                $params['filter'] = $key;
+            }
             $filters[] = [
                 'key' => $key,
                 'label' => get_string('filter_' . $key, 'tool_murules'),
                 'count' => $counts[$key],
-                'url' => (new \moodle_url('/admin/tool/murules/index.php', $key === 'all' ? [] : ['filter' => $key]))->out(false),
+                'url' => (new \moodle_url('/admin/tool/murules/index.php', $params))->out(false),
                 'selected' => $key === $filter,
             ];
         }
 
         $settingsurl = (new \moodle_url('/admin/settings.php', ['section' => 'tool_murules_settings']))->out(false);
+        $searchaction = (new \moodle_url('/admin/tool/murules/index.php'))->out(false);
 
         return $this->render_from_template('tool_murules/rule_cards', [
             'hasrules' => !empty($all),
@@ -130,6 +153,11 @@ class renderer extends plugin_renderer_base {
             'observersoff' => !\tool_murules\local\engine::is_killed()
                 && !\tool_murules\local\engine::observers_enabled(),
             'settingsurl' => $settingsurl,
+            'searchaction' => $searchaction,
+            'query' => s($query),
+            'hasquery' => $query !== '',
+            'filtervalue' => $filter !== 'all' ? $filter : '',
+            'clearurl' => (new \moodle_url('/admin/tool/murules/index.php', $filter !== 'all' ? ['filter' => $filter] : []))->out(false),
         ]);
     }
 

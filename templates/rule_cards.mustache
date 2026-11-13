@@ -31,6 +31,20 @@
             <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
         </div>
     </div>
+    {{#hasrules}}
+        <form class="tool_murules-search" method="get" action="{{searchaction}}" role="search">
+            {{#filtervalue}}
+                <input type="hidden" name="filter" value="{{filtervalue}}">
+            {{/filtervalue}}
+            <label class="visually-hidden" for="tool_murules_search_q">{{#str}} searchrules, tool_murules {{/str}}</label>
+            <input id="tool_murules_search_q" class="form-control" type="search" name="q" value="{{query}}"
+                   placeholder="{{#str}} searchrules_placeholder, tool_murules {{/str}}" autocomplete="off">
+            <button class="btn btn-secondary" type="submit">{{#str}} search {{/str}}</button>
+            {{#hasquery}}
+                <a class="btn btn-link btn-sm" href="{{clearurl}}">{{#str}} clearsearch, tool_murules {{/str}}</a>
+            {{/hasquery}}
+        </form>
+    {{/hasrules}}
     {{^hasrules}}
         <div class="tool_murules-empty">
             <h3 class="tool_murules-empty-title">{{#str}} norules_title, tool_murules {{/str}}</h3>
