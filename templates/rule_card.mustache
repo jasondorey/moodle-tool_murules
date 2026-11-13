@@ -25,7 +25,12 @@
             <div>{{then}}</div>
         </div>
     </div>
-    <div class="tool_murules-stats">{{stats}}</div>
+    <div class="tool_murules-stats">
+        <div>{{stats}}</div>
+        {{#haslastapplied}}
+            <div class="tool_murules-lastapplied">{{lastapplied}}</div>
+        {{/haslastapplied}}
+    </div>
     <div class="tool_murules-actions">
         <a class="btn btn-secondary btn-sm" href="{{editurl}}" title="{{#str}} editrule, tool_murules {{/str}}">{{#str}} edit {{/str}}</a>
         <a class="btn btn-secondary btn-sm" href="{{toggleurl}}">

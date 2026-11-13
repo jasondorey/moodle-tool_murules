@@ -51,6 +51,16 @@ class renderer extends plugin_renderer_base {
             $filterparams['q'] = $query;
         }
 
+        global $DB;
+
+        $lastapplied = $DB->get_records_sql_menu(
+            "SELECT ruleid, MAX(timecreated)
+               FROM {tool_murules_match}
+              WHERE status = :status
+           GROUP BY ruleid",
+            ['status' => 'applied']
+        );
+
         $all = [];
         $counts = ['all' => 0, 'enabled' => 0, 'disabled' => 0, 'broken' => 0];
         foreach (rule::get_all() as $rec) {
@@ -73,6 +83,7 @@ class renderer extends plugin_renderer_base {
                 }
             }
             $stats = rule::get_match_stats((int)$rec->id);
+            $lastts = isset($lastapplied[$rec->id]) ? (int)$lastapplied[$rec->id] : 0;
             $card = [
                 'name' => format_string($rec->name),
                 'nametext' => \core_text::strtolower((string)$rec->name),
@@ -81,6 +92,10 @@ class renderer extends plugin_renderer_base {
                 'when' => $when,
                 'then' => implode('; ', $thenparts),
                 'stats' => get_string('matchstats', 'tool_murules', (object)$stats),
+                'haslastapplied' => $lastts > 0,
+                'lastapplied' => $lastts > 0
+                    ? get_string('lastapplied', 'tool_murules', userdate($lastts, get_string('strftimedatetimeshort', 'langconfig')))
+                    : '',
                 'editurl' => (new \moodle_url('/admin/tool/murules/edit.php', ['id' => $rec->id]))->out(false),
                 'toggleurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
                     'action' => 'toggle',

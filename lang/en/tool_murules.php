@@ -55,6 +55,7 @@ $string['rulebroken'] = 'Broken';
 $string['when'] = 'WHEN';
 $string['then'] = 'THEN';
 $string['matchstats'] = '{$a->applied} applied · {$a->skipped} skipped · {$a->failed} failed';
+$string['lastapplied'] = 'Last applied {$a}';
 
 $string['wizard_event'] = 'Event';
 $string['wizard_actions'] = 'Actions';

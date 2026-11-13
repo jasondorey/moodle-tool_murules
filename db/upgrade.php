@@ -94,5 +94,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Overview name search.
         upgrade_plugin_savepoint(true, 2026111316, 'tool', 'murules');
     }
+    if ($oldversion < 2026111317) {
+        // Card last-applied timestamp from match log.
+        upgrade_plugin_savepoint(true, 2026111317, 'tool', 'murules');
+    }
     return true;
 }
