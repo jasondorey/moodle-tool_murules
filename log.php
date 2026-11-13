@@ -47,11 +47,11 @@ $PAGE->set_title(get_string('rulelog', 'tool_murules'));
 $PAGE->set_heading(format_string($rulerec->name) . ' — ' . get_string('rulelog', 'tool_murules'));
 $PAGE->navbar->add(format_string($rulerec->name));
 
-$params = ['ruleid' => $id];
+$sqlparams = ['ruleid' => $id];
 $wheresql = 'ruleid = :ruleid';
 if ($statusfilter !== 'all') {
     $wheresql .= ' AND status = :status';
-    $params['status'] = $statusfilter;
+    $sqlparams['status'] = $statusfilter;
 }
 
 if ($download === 'csv') {
@@ -59,7 +59,7 @@ if ($download === 'csv') {
     $csvrecords = $DB->get_records_select(
         'tool_murules_match',
         $wheresql,
-        $params,
+        $sqlparams,
         'timecreated DESC, id DESC',
         '*',
         0,
@@ -127,9 +127,9 @@ $filterhtml = html_writer::start_tag('nav', [
     'aria-label' => get_string('log_filter_label', 'tool_murules'),
 ]);
 foreach ($allowedstatus as $key) {
-    $params = ['id' => $id];
+    $linkparams = ['id' => $id];
     if ($key !== 'all') {
-        $params['status'] = $key;
+        $linkparams['status'] = $key;
     }
     $classes = 'tool_murules-filter';
     if ($key === $statusfilter) {
@@ -137,7 +137,7 @@ foreach ($allowedstatus as $key) {
     }
     $label = get_string('log_filter_' . $key, 'tool_murules');
     $filterhtml .= html_writer::link(
-        new moodle_url('/admin/tool/murules/log.php', $params),
+        new moodle_url('/admin/tool/murules/log.php', $linkparams),
         $label . ' ' . html_writer::span((string)$counts[$key], 'tool_murules-filter-count'),
         ['class' => $classes] + ($key === $statusfilter ? ['aria-current' => 'page'] : [])
     );
@@ -153,7 +153,7 @@ if ($statusfilter !== 'all') {
     );
 }
 
-$total = (int)$DB->count_records_select('tool_murules_match', $wheresql, $params);
+$total = (int)$DB->count_records_select('tool_murules_match', $wheresql, $sqlparams);
 if (!$total) {
     echo html_writer::div(
         html_writer::tag('h3', get_string('log_filter_empty_title', 'tool_murules'), ['class' => 'tool_murules-empty-title']) .
@@ -167,7 +167,7 @@ if (!$total) {
 $records = $DB->get_records_select(
     'tool_murules_match',
     $wheresql,
-    $params,
+    $sqlparams,
     'timecreated DESC, id DESC',
     '*',
     $page * $perpage,

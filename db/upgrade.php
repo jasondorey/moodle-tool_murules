@@ -158,5 +158,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Card "No matches yet" when match stats are all zero.
         upgrade_plugin_savepoint(true, 2026111332, 'tool', 'murules');
     }
+    if ($oldversion < 2026111333) {
+        // Log status tabs no longer overwrite SQL :ruleid params.
+        upgrade_plugin_savepoint(true, 2026111333, 'tool', 'murules');
+    }
     return true;
 }
