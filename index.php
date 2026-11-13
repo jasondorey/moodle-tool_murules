@@ -80,7 +80,22 @@ $PAGE->set_heading(get_string('rulesoverview', 'tool_murules'));
 /** @var \tool_murules\output\renderer $renderer */
 $renderer = $PAGE->get_renderer('tool_murules');
 
+$contextbits = [];
+if ($filter !== 'all') {
+    $contextbits[] = get_string('filter_' . $filter, 'tool_murules');
+}
+if ($query !== '') {
+    $contextbits[] = get_string('searchquery_label', 'tool_murules', $query);
+}
+
 echo $OUTPUT->header();
 echo html_writer::tag('p', get_string('rulesoverview_help', 'tool_murules'), ['class' => 'tool_murules-lead text-muted']);
+if ($contextbits) {
+    echo html_writer::tag(
+        'p',
+        get_string('overview_showing', 'tool_murules', implode(' · ', $contextbits)),
+        ['class' => 'tool_murules-showing', 'aria-live' => 'polite']
+    );
+}
 echo $renderer->rule_cards($filter, $query);
 echo $OUTPUT->footer();
