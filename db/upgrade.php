@@ -34,5 +34,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
     if ($oldversion < 2026111301) {
         upgrade_plugin_savepoint(true, 2026111301, 'tool', 'murules');
     }
+    if ($oldversion < 2026111302) {
+        // Wave C: MuTMS conditions/actions + message provider (no schema change).
+        upgrade_plugin_savepoint(true, 2026111302, 'tool', 'murules');
+    }
     return true;
 }

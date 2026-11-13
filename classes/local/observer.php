@@ -183,6 +183,101 @@ final class observer {
     }
 
     /**
+     * @param \tool_muprog\event\allocation_created $event
+     */
+    public static function muprog_allocation_created(\tool_muprog\event\allocation_created $event): void {
+        self::queue_muprog_allocation_event($event, \tool_muprog\event\allocation_created::class);
+    }
+
+    /**
+     * @param \tool_muprog\event\allocation_restored $event
+     */
+    public static function muprog_allocation_restored(\tool_muprog\event\allocation_restored $event): void {
+        self::queue_muprog_allocation_event($event, \tool_muprog\event\allocation_restored::class);
+    }
+
+    /**
+     * @param \tool_muprog\event\allocation_completed $event
+     */
+    public static function muprog_allocation_completed(\tool_muprog\event\allocation_completed $event): void {
+        self::queue_muprog_allocation_event($event, \tool_muprog\event\allocation_completed::class);
+    }
+
+    /**
+     * @param \tool_mucertify\event\assignment_created $event
+     */
+    public static function mucertify_assignment_created(\tool_mucertify\event\assignment_created $event): void {
+        self::queue_for_user(
+            (int)($event->relateduserid ?: $event->userid),
+            \tool_mucertify\event\assignment_created::class,
+            0,
+            ['certificationid' => (int)($event->other['certificationid'] ?? 0)]
+        );
+    }
+
+    /**
+     * @param \tool_mucertify\event\assignment_restored $event
+     */
+    public static function mucertify_assignment_restored(\tool_mucertify\event\assignment_restored $event): void {
+        self::queue_for_user(
+            (int)($event->relateduserid ?: $event->userid),
+            \tool_mucertify\event\assignment_restored::class,
+            0,
+            ['certificationid' => (int)($event->other['certificationid'] ?? 0)]
+        );
+    }
+
+    /**
+     * @param \tool_mucertify\event\period_certified $event
+     */
+    public static function mucertify_period_certified(\tool_mucertify\event\period_certified $event): void {
+        self::queue_for_user(
+            (int)($event->relateduserid ?: $event->userid),
+            \tool_mucertify\event\period_certified::class,
+            0,
+            ['certificationid' => (int)($event->other['certificationid'] ?? 0)]
+        );
+    }
+
+    /**
+     * @param \tool_mucertify\event\period_updated $event
+     */
+    public static function mucertify_period_updated(\tool_mucertify\event\period_updated $event): void {
+        self::queue_for_user(
+            (int)($event->relateduserid ?: $event->userid),
+            \tool_mucertify\event\period_updated::class,
+            0,
+            ['certificationid' => (int)($event->other['certificationid'] ?? 0)]
+        );
+    }
+
+    /**
+     * @param \tool_mutenancy\event\user_allocated $event
+     */
+    public static function mutenancy_user_allocated(\tool_mutenancy\event\user_allocated $event): void {
+        self::queue_for_user(
+            (int)($event->relateduserid ?: $event->objectid),
+            \tool_mutenancy\event\user_allocated::class,
+            0,
+            ['tenantid' => (int)($event->other['tenantid'] ?? 0)]
+        );
+    }
+
+    /**
+     * @param \core\event\base $event
+     * @param string $eventclass
+     */
+    protected static function queue_muprog_allocation_event(\core\event\base $event, string $eventclass): void {
+        $userid = (int)($event->relateduserid ?: $event->userid);
+        $programid = (int)($event->other['programid'] ?? 0);
+        if (!$programid && !empty($event->objectid)) {
+            global $DB;
+            $programid = (int)$DB->get_field('tool_muprog_allocation', 'programid', ['id' => (int)$event->objectid]);
+        }
+        self::queue_for_user($userid, $eventclass, 0, ['programid' => $programid]);
+    }
+
+    /**
      * @param int $userid
      * @param string $eventclass
      * @param int $cmid

@@ -87,4 +87,37 @@ $observers = [
         'eventname' => '\core\event\competency_user_competency_rated_in_plan',
         'callback' => '\tool_murules\local\observer::competency_user_competency_rated_in_plan',
     ],
+    // Wave C — MuTMS program / certification / tenancy.
+    [
+        'eventname' => '\tool_muprog\event\allocation_created',
+        'callback' => '\tool_murules\local\observer::muprog_allocation_created',
+    ],
+    [
+        'eventname' => '\tool_muprog\event\allocation_restored',
+        'callback' => '\tool_murules\local\observer::muprog_allocation_restored',
+    ],
+    [
+        'eventname' => '\tool_muprog\event\allocation_completed',
+        'callback' => '\tool_murules\local\observer::muprog_allocation_completed',
+    ],
+    [
+        'eventname' => '\tool_mucertify\event\assignment_created',
+        'callback' => '\tool_murules\local\observer::mucertify_assignment_created',
+    ],
+    [
+        'eventname' => '\tool_mucertify\event\assignment_restored',
+        'callback' => '\tool_murules\local\observer::mucertify_assignment_restored',
+    ],
+    [
+        'eventname' => '\tool_mucertify\event\period_certified',
+        'callback' => '\tool_murules\local\observer::mucertify_period_certified',
+    ],
+    [
+        'eventname' => '\tool_mucertify\event\period_updated',
+        'callback' => '\tool_murules\local\observer::mucertify_period_updated',
+    ],
+    [
+        'eventname' => '\tool_mutenancy\event\user_allocated',
+        'callback' => '\tool_murules\local\observer::mutenancy_user_allocated',
+    ],
 ];

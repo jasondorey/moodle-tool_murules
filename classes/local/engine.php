@@ -151,10 +151,12 @@ final class engine {
 
         $condition = registry::get_condition($rulerec->conditiontype);
         if (!$condition) {
+            self::disable_broken_rule($rulerec);
             return [self::log_only_result('failed', get_string('reason_broken', 'tool_murules'))];
         }
         $config = rule::condition_config($rulerec);
         if ($condition->is_broken($config)) {
+            self::disable_broken_rule($rulerec);
             return [self::log_only_result('failed', get_string('reason_broken', 'tool_murules'))];
         }
 
@@ -319,5 +321,20 @@ final class engine {
      */
     protected static function log_only_result(string $status, string $reason): array {
         return ['status' => $status, 'reason' => $reason, 'logged' => false];
+    }
+
+    /**
+     * Auto-disable an enabled rule whose condition is broken / missing.
+     *
+     * @param stdClass $rulerec
+     */
+    protected static function disable_broken_rule(stdClass $rulerec): void {
+        global $DB;
+        if (empty($rulerec->enabled) || empty($rulerec->id)) {
+            return;
+        }
+        $DB->set_field('tool_murules_rule', 'enabled', 0, ['id' => (int)$rulerec->id]);
+        $DB->set_field('tool_murules_rule', 'timemodified', time(), ['id' => (int)$rulerec->id]);
+        $rulerec->enabled = 0;
     }
 }

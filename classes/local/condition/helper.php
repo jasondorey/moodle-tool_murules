@@ -301,4 +301,136 @@ final class helper {
         $name = $DB->get_field('cohort', 'name', ['id' => $cohortid]);
         return $name ? format_string($name) : '#'.$cohortid;
     }
+
+    /**
+     * Program menu (non-archived).
+     *
+     * @return array<int, string>
+     */
+    public static function program_options(): array {
+        global $DB;
+        if (!$DB->get_manager()->table_exists('tool_muprog_program')) {
+            return [];
+        }
+        $records = $DB->get_records('tool_muprog_program', ['archived' => 0], 'fullname ASC', 'id, fullname');
+        $options = [];
+        foreach ($records as $rec) {
+            $options[(int)$rec->id] = format_string($rec->fullname);
+        }
+        return $options;
+    }
+
+    /**
+     * @param int $programid
+     * @return string
+     */
+    public static function program_name(int $programid): string {
+        global $DB;
+        if (!$programid) {
+            return '?';
+        }
+        $name = $DB->get_field('tool_muprog_program', 'fullname', ['id' => $programid]);
+        return $name ? format_string($name) : '#'.$programid;
+    }
+
+    /**
+     * Certification menu (non-archived).
+     *
+     * @return array<int, string>
+     */
+    public static function certification_options(): array {
+        global $DB;
+        if (!$DB->get_manager()->table_exists('tool_mucertify_certification')) {
+            return [];
+        }
+        $records = $DB->get_records('tool_mucertify_certification', ['archived' => 0], 'fullname ASC', 'id, fullname');
+        $options = [];
+        foreach ($records as $rec) {
+            $options[(int)$rec->id] = format_string($rec->fullname);
+        }
+        return $options;
+    }
+
+    /**
+     * @param int $certificationid
+     * @return string
+     */
+    public static function certification_name(int $certificationid): string {
+        global $DB;
+        if (!$certificationid) {
+            return '?';
+        }
+        $name = $DB->get_field('tool_mucertify_certification', 'fullname', ['id' => $certificationid]);
+        return $name ? format_string($name) : '#'.$certificationid;
+    }
+
+    /**
+     * Tenant menu (non-archived).
+     *
+     * @return array<int, string>
+     */
+    public static function tenant_options(): array {
+        global $DB;
+        if (!$DB->get_manager()->table_exists('tool_mutenancy_tenant')) {
+            return [];
+        }
+        $records = $DB->get_records('tool_mutenancy_tenant', ['archived' => 0], 'name ASC', 'id, name, idnumber');
+        $options = [];
+        foreach ($records as $rec) {
+            $label = format_string($rec->name);
+            if ($rec->idnumber !== '') {
+                $label .= ' (' . $rec->idnumber . ')';
+            }
+            $options[(int)$rec->id] = $label;
+        }
+        return $options;
+    }
+
+    /**
+     * @param int $tenantid
+     * @return string
+     */
+    public static function tenant_name(int $tenantid): string {
+        global $DB;
+        if (!$tenantid) {
+            return '?';
+        }
+        $name = $DB->get_field('tool_mutenancy_tenant', 'name', ['id' => $tenantid]);
+        return $name ? format_string($name) : '#'.$tenantid;
+    }
+
+    /**
+     * Relation framework menu.
+     *
+     * @return array<int, string>
+     */
+    public static function framework_options(): array {
+        global $DB;
+        if (!$DB->get_manager()->table_exists('tool_murelation_framework')) {
+            return [];
+        }
+        $records = $DB->get_records('tool_murelation_framework', null, 'name ASC', 'id, name, idnumber');
+        $options = [];
+        foreach ($records as $rec) {
+            $label = format_string($rec->name);
+            if ($rec->idnumber !== '') {
+                $label .= ' (' . $rec->idnumber . ')';
+            }
+            $options[(int)$rec->id] = $label;
+        }
+        return $options;
+    }
+
+    /**
+     * @param int $frameworkid
+     * @return string
+     */
+    public static function framework_name(int $frameworkid): string {
+        global $DB;
+        if (!$frameworkid) {
+            return '?';
+        }
+        $name = $DB->get_field('tool_murelation_framework', 'name', ['id' => $frameworkid]);
+        return $name ? format_string($name) : '#'.$frameworkid;
+    }
 }
