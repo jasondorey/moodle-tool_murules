@@ -74,5 +74,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Card/filter focus-visible and hover affordances.
         upgrade_plugin_savepoint(true, 2026111311, 'tool', 'murules');
     }
+    if ($oldversion < 2026111312) {
+        // Delete confirm copy + Event WHEN preview when editing saved config.
+        upgrade_plugin_savepoint(true, 2026111312, 'tool', 'murules');
+    }
     return true;
 }

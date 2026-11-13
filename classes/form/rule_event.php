@@ -59,6 +59,15 @@ class rule_event extends \moodleform {
             $mform->addElement('header', 'hdr_config', $condition->get_name());
             $mform->setExpanded('hdr_config', true);
             $condition->add_config_form_elements($mform, $conditionconfig);
+            if (!empty($conditionconfig) && !$condition->is_broken($conditionconfig)) {
+                $preview = $condition->get_description($conditionconfig);
+                $mform->addElement(
+                    'static',
+                    'when_preview',
+                    get_string('when', 'tool_murules'),
+                    \html_writer::div(s($preview), 'tool_murules-recap tool_murules-recap-when')
+                );
+            }
         }
 
         $this->add_action_buttons(true, get_string('saveandcontinue', 'tool_murules'));
