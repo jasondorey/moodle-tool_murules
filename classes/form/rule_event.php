@@ -16,10 +16,11 @@
 
 namespace tool_murules\form;
 
+use moodle_url;
 use tool_murules\local\registry;
 
 /**
- * Wizard step 1: Event (WHEN).
+ * Wizard step 1: Event (WHEN) configuration for a picked condition.
  *
  * Only the selected condition's fields are rendered so client-side required
  * rules cannot block submit from hidden panels.
@@ -35,39 +36,47 @@ class rule_event extends \moodleform {
         $custom = $this->_customdata;
         $conditiontype = (string)($custom['conditiontype'] ?? '');
         $conditionconfig = $custom['conditionconfig'] ?? [];
+        $changepickurl = $custom['changepickurl'] ?? null;
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'step', 'event');
         $mform->setType('step', PARAM_ALPHA);
+        $mform->addElement('hidden', 'pick', $conditiontype);
+        $mform->setType('pick', PARAM_ALPHANUMEXT);
 
-        $menu = registry::get_condition_menu(true);
-        $mform->addElement('selectgroups', 'conditiontype', get_string('conditiontype', 'tool_murules'), $menu);
-        $mform->addRule('conditiontype', get_string('error_condition', 'tool_murules'), 'required', null, 'client');
-
-        $selected = $conditiontype;
-        if (!$selected || !registry::get_condition($selected)) {
-            foreach ($menu as $group) {
-                $selected = (string)array_key_first($group);
-                break;
-            }
+        $condition = registry::get_condition($conditiontype);
+        if (!$condition || !$condition->is_available()) {
+            $mform->addElement('static', 'nopick', '', get_string('error_condition', 'tool_murules'));
+            $this->add_action_buttons(true, get_string('cancelwizard', 'tool_murules'));
+            return;
         }
-        $mform->setDefault('conditiontype', $selected);
 
-        $condition = registry::get_condition($selected);
-        if ($condition && $condition->is_available()) {
-            $mform->addElement('header', 'hdr_config', $condition->get_name());
-            $mform->setExpanded('hdr_config', true);
-            $condition->add_config_form_elements($mform, $conditionconfig);
-            if (!empty($conditionconfig) && !$condition->is_broken($conditionconfig)) {
-                $preview = $condition->get_description($conditionconfig);
-                $mform->addElement(
-                    'static',
-                    'when_preview',
-                    get_string('when', 'tool_murules'),
-                    \html_writer::div(s($preview), 'tool_murules-recap tool_murules-recap-when')
-                );
-            }
+        $mform->addElement('hidden', 'conditiontype', $conditiontype);
+        $mform->setType('conditiontype', PARAM_ALPHANUMEXT);
+        $mform->setConstant('conditiontype', $conditiontype);
+
+        $pickedlabel = $condition->get_name();
+        if ($changepickurl instanceof moodle_url) {
+            $pickedlabel .= ' ' . \html_writer::link(
+                $changepickurl,
+                get_string('changecondition', 'tool_murules'),
+                ['class' => 'ms-2 small']
+            );
+        }
+        $mform->addElement('static', 'picked_condition', get_string('conditiontype', 'tool_murules'), $pickedlabel);
+
+        $mform->addElement('header', 'hdr_config', get_string('conditionconfig', 'tool_murules'));
+        $mform->setExpanded('hdr_config', true);
+        $condition->add_config_form_elements($mform, $conditionconfig);
+        if (!empty($conditionconfig) && !$condition->is_broken($conditionconfig)) {
+            $preview = $condition->get_description($conditionconfig);
+            $mform->addElement(
+                'static',
+                'when_preview',
+                get_string('when', 'tool_murules'),
+                \html_writer::div(s($preview), 'tool_murules-recap tool_murules-recap-when')
+            );
         }
 
         $hasconditions = !empty($custom['hasconditions']);

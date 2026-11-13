@@ -35,6 +35,10 @@ class competency_achieved extends base {
         return get_string('condition:competency_achieved', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'competency';
+    }
+
     public function get_description(array $config): string {
         return get_string('condition:competency_achieved_desc', 'tool_murules', (object)[
             'competency' => $this->competency_name((int)($config['competencyid'] ?? 0)),

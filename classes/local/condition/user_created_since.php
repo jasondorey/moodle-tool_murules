@@ -35,6 +35,10 @@ class user_created_since extends base {
         return get_string('condition:user_created_since', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'user';
+    }
+
     public function get_description(array $config): string {
         return get_string('condition:user_created_since_desc', 'tool_murules', (object)[
             'window' => helper::describe_time_window($config),

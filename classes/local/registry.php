@@ -83,22 +83,75 @@ final class registry {
     }
 
     /**
+     * Stable display order for Event-step category accordion cards.
+     *
+     * @return string[]
+     */
+    public static function get_condition_category_order(): array {
+        return [
+            'enrollment',
+            'course',
+            'activity',
+            'user',
+            'cohort',
+            'competency',
+            'program',
+            'certification',
+            'relation',
+            'tenancy',
+            'general',
+            'local',
+        ];
+    }
+
+    /**
      * Condition options grouped for the wizard.
      *
      * @param bool $availableonly
-     * @return array<string, array<string, string>> category => [type => name]
+     * @return array<string, array<string, string>> category label => [type => name]
      */
     public static function get_condition_menu(bool $availableonly = true): array {
+        $grouped = self::get_conditions_by_category($availableonly);
         $menu = [];
+        foreach ($grouped as $category => $items) {
+            $catlabel = get_string('category_' . $category, 'tool_murules');
+            foreach ($items as $type => $condition) {
+                $menu[$catlabel][$type] = $condition->get_name();
+            }
+        }
+        return $menu;
+    }
+
+    /**
+     * Conditions keyed by category for the Event picker accordion.
+     *
+     * @param bool $availableonly
+     * @return array<string, array<string, condition_base>> category => [type => instance]
+     */
+    public static function get_conditions_by_category(bool $availableonly = true): array {
+        $bycat = [];
         foreach (self::get_conditions() as $type => $condition) {
             if ($availableonly && !$condition->is_available()) {
                 continue;
             }
             $category = $condition->get_category();
-            $catlabel = get_string('category_' . $category, 'tool_murules');
-            $menu[$catlabel][$type] = $condition->get_name();
+            if ($category === '') {
+                $category = 'general';
+            }
+            $bycat[$category][$type] = $condition;
         }
-        return $menu;
+        $ordered = [];
+        foreach (self::get_condition_category_order() as $category) {
+            if (!empty($bycat[$category])) {
+                $ordered[$category] = $bycat[$category];
+                unset($bycat[$category]);
+            }
+        }
+        // Any unexpected categories last.
+        foreach ($bycat as $category => $items) {
+            $ordered[$category] = $items;
+        }
+        return $ordered;
     }
 
     /**

@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111337;
+$plugin->version   = 2026111338;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.5.1-multiAction';
+$plugin->release   = '0.5.2-eventPicker';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,

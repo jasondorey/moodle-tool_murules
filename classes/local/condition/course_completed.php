@@ -35,6 +35,10 @@ class course_completed extends base {
         return get_string('condition:course_completed', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'course';
+    }
+
     public function get_description(array $config): string {
         $a = (object)[
             'course' => helper::course_name((int)($config['courseid'] ?? 0)),

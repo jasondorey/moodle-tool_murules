@@ -35,6 +35,10 @@ class course_last_access extends base {
         return get_string('condition:course_last_access', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'course';
+    }
+
     public function get_description(array $config): string {
         return get_string('condition:course_last_access_desc', 'tool_murules', (object)[
             'course' => helper::course_name((int)($config['courseid'] ?? 0)),

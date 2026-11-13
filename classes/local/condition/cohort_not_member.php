@@ -35,6 +35,10 @@ class cohort_not_member extends base {
         return get_string('condition:cohort_not_member', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'cohort';
+    }
+
     public function get_description(array $config): string {
         return get_string('condition:cohort_not_member_desc', 'tool_murules', (object)[
             'cohort' => helper::cohort_name((int)($config['cohortid'] ?? 0)),

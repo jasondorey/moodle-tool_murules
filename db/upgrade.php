@@ -215,5 +215,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111337, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111338) {
+        // Categorized Event-step condition picker (native Bootstrap accordion).
+        upgrade_plugin_savepoint(true, 2026111338, 'tool', 'murules');
+    }
+
     return true;
 }

@@ -35,6 +35,10 @@ class user_enrolled extends base {
         return get_string('condition:user_enrolled', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'enrollment';
+    }
+
     public function get_description(array $config): string {
         $method = $config['enrolmethod'] ?? 'any';
         $methodlabel = $method === 'any'

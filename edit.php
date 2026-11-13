@@ -198,6 +198,15 @@ if (empty($editingaction['actiontype']) && empty($draft['actions'])) {
     ];
 }
 
+// Clear the in-progress condition pick and return to the category accordion.
+$clearpick = optional_param('clearpick', 0, PARAM_BOOL);
+if ($step === 'event' && $clearpick) {
+    require_sesskey();
+    $draft['editing'] = ['conditiontype' => '', 'conditionconfig' => []];
+    $SESSION->$sesskeyname = $draft;
+    redirect(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => 'event']));
+}
+
 // Remove a saved AND condition.
 if ($step === 'event' && $removecond >= 0) {
     require_sesskey();
@@ -257,44 +266,62 @@ $renderer = $PAGE->get_renderer('tool_murules');
 
 if ($step === 'event') {
     $hasconditions = !empty($draft['conditions']);
-    $form = new \tool_murules\form\rule_event(null, [
-        'conditiontype' => $editing['conditiontype'] ?? '',
-        'conditionconfig' => $editing['conditionconfig'] ?? [],
-        'hasconditions' => $hasconditions,
-    ]);
-    $form->set_data([
-        'id' => $id,
-        'conditiontype' => $editing['conditiontype'] ?? '',
-    ]);
-    if ($form->is_cancelled()) {
-        unset($SESSION->$sesskeyname);
-        redirect(new moodle_url('/admin/tool/murules/rules.php'));
+    $pickedtype = (string)($editing['conditiontype'] ?? '');
+    if ($pick === '' || !\tool_murules\local\registry::get_condition($pickedtype)) {
+        $pickedtype = '';
     }
-    if ($data = $form->get_data()) {
-        $condition = \tool_murules\local\registry::get_condition($data->conditiontype);
-        $newcond = [
-            'conditiontype' => $data->conditiontype,
-            'conditionconfig' => $condition->extract_config((array)$data),
-        ];
-        $draft['conditions'][] = $newcond;
-        $draft['editing'] = ['conditiontype' => '', 'conditionconfig' => []];
-        $draft['id'] = (int)($data->id ?? 0);
-        $draft = tool_murules_normalize_draft_conditions($draft);
-        $SESSION->$sesskeyname = $draft;
+    $showpicker = ($pickedtype === '');
 
-        // With existing conditions, submit only adds; otherwise continue unless addanother.
-        if ($hasconditions || !empty($data->addanother)) {
+    $changepickurl = new moodle_url('/admin/tool/murules/edit.php', [
+        'id' => $id,
+        'step' => 'event',
+        'clearpick' => 1,
+        'sesskey' => sesskey(),
+    ]);
+
+    if (!$showpicker) {
+        $form = new \tool_murules\form\rule_event(null, [
+            'conditiontype' => $pickedtype,
+            'conditionconfig' => $editing['conditionconfig'] ?? [],
+            'hasconditions' => $hasconditions,
+            'changepickurl' => $changepickurl,
+        ]);
+        $form->set_data([
+            'id' => $id,
+            'conditiontype' => $pickedtype,
+            'pick' => $pickedtype,
+        ]);
+        if ($form->is_cancelled()) {
+            unset($SESSION->$sesskeyname);
+            redirect(new moodle_url('/admin/tool/murules/rules.php'));
+        }
+        if ($data = $form->get_data()) {
+            $condition = \tool_murules\local\registry::get_condition($data->conditiontype);
+            $newcond = [
+                'conditiontype' => $data->conditiontype,
+                'conditionconfig' => $condition->extract_config((array)$data),
+            ];
+            $draft['conditions'][] = $newcond;
+            $draft['editing'] = ['conditiontype' => '', 'conditionconfig' => []];
+            $draft['id'] = (int)($data->id ?? 0);
+            $draft = tool_murules_normalize_draft_conditions($draft);
+            $SESSION->$sesskeyname = $draft;
+
+            // With existing conditions, submit only adds; otherwise continue unless addanother.
+            if ($hasconditions || !empty($data->addanother)) {
+                redirect(new moodle_url('/admin/tool/murules/edit.php', [
+                    'id' => $draft['id'],
+                    'step' => 'event',
+                ]));
+            }
             redirect(new moodle_url('/admin/tool/murules/edit.php', [
                 'id' => $draft['id'],
-                'step' => 'event',
+                'step' => 'actions',
             ]));
         }
-        redirect(new moodle_url('/admin/tool/murules/edit.php', [
-            'id' => $draft['id'],
-            'step' => 'actions',
-        ]));
+        $PAGE->requires->js_call_amd('tool_murules/wizard_event', 'init');
     }
-    $PAGE->requires->js_call_amd('tool_murules/wizard_event', 'init');
+
     echo $OUTPUT->header();
     echo $renderer->wizard_exit_nav();
     echo $renderer->wizard_steps('event');
@@ -342,14 +369,30 @@ if ($step === 'event') {
         );
     }
 
-    echo $OUTPUT->heading(
-        $hasconditions
-            ? get_string('configure_next_condition', 'tool_murules')
-            : get_string('wizard_event', 'tool_murules'),
-        4,
-        'h6 mt-3'
-    );
-    $form->display();
+    if ($showpicker) {
+        echo $OUTPUT->heading(
+            $hasconditions
+                ? get_string('configure_next_condition', 'tool_murules')
+                : get_string('pickcondition_heading', 'tool_murules'),
+            4,
+            'h5 mt-3'
+        );
+        echo html_writer::tag('p', get_string('pickcondition_help', 'tool_murules'), ['class' => 'text-muted small']);
+        echo $renderer->event_condition_picker($id);
+        if (!$hasconditions) {
+            echo html_writer::div(
+                html_writer::link(
+                    new moodle_url('/admin/tool/murules/rules.php'),
+                    get_string('cancelwizard', 'tool_murules'),
+                    ['class' => 'btn btn-link']
+                ),
+                'mt-3'
+            );
+        }
+    } else {
+        echo $OUTPUT->heading(get_string('configure_condition', 'tool_murules'), 4, 'h5 mt-3');
+        $form->display();
+    }
     echo $OUTPUT->footer();
     exit;
 }

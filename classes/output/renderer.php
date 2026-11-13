@@ -242,6 +242,15 @@ class renderer extends plugin_renderer_base {
             'class' => 'tool_murules-wizard-progress text-muted small mb-0',
             'aria-live' => 'polite',
         ]);
+        if ($current === 'event') {
+            $html .= html_writer::tag('p', get_string('wizard_next_actions', 'tool_murules'), [
+                'class' => 'tool_murules-wizard-next text-muted small mb-0',
+            ]);
+        } else if ($current === 'actions') {
+            $html .= html_writer::tag('p', get_string('wizard_next_review', 'tool_murules'), [
+                'class' => 'tool_murules-wizard-next text-muted small mb-0',
+            ]);
+        }
         $html .= html_writer::end_tag('nav');
         return $html;
     }
@@ -277,6 +286,84 @@ class renderer extends plugin_renderer_base {
             ),
             'tool_murules-wizard-exit mb-2'
         );
+    }
+
+    /**
+     * Connect-style categorized condition picker (Bootstrap accordion).
+     *
+     * @param int $ruleid
+     * @return string
+     */
+    public function event_condition_picker(int $ruleid = 0): string {
+        $grouped = registry::get_conditions_by_category(true);
+        if (!$grouped) {
+            return html_writer::div(get_string('nopickerconditions', 'tool_murules'), 'alert alert-warning');
+        }
+
+        $accordionid = 'tool_murules_event_picker';
+        $html = html_writer::start_div('tool_murules-event-picker accordion', ['id' => $accordionid]);
+        $first = true;
+        $index = 0;
+        foreach ($grouped as $category => $conditions) {
+            $index++;
+            $collapseid = $accordionid . '_c' . $index;
+            $headingid = $accordionid . '_h' . $index;
+            $count = count($conditions);
+            $expanded = $first;
+            $first = false;
+
+            $html .= html_writer::start_div('accordion-item tool_murules-picker-category');
+            $buttonattrs = [
+                'class' => 'accordion-button' . ($expanded ? '' : ' collapsed'),
+                'type' => 'button',
+                'data-bs-toggle' => 'collapse',
+                'data-bs-target' => '#' . $collapseid,
+                'aria-expanded' => $expanded ? 'true' : 'false',
+                'aria-controls' => $collapseid,
+            ];
+            $title = html_writer::span(get_string('category_' . $category, 'tool_murules'), 'tool_murules-picker-catname') .
+                html_writer::span((string)$count, 'badge text-bg-secondary ms-2');
+            $html .= html_writer::tag('h3', html_writer::tag('button', $title, $buttonattrs), [
+                'class' => 'accordion-header h6 mb-0',
+                'id' => $headingid,
+            ]);
+
+            $bodyattrs = [
+                'id' => $collapseid,
+                'class' => 'accordion-collapse collapse' . ($expanded ? ' show' : ''),
+                'aria-labelledby' => $headingid,
+                'data-bs-parent' => '#' . $accordionid,
+            ];
+            $html .= html_writer::start_div('', $bodyattrs);
+            $html .= html_writer::start_div('accordion-body p-0');
+            $html .= html_writer::start_tag('ul', ['class' => 'list-group list-group-flush']);
+            foreach ($conditions as $type => $condition) {
+                $url = new moodle_url('/admin/tool/murules/edit.php', [
+                    'id' => $ruleid,
+                    'step' => 'event',
+                    'pick' => $type,
+                ]);
+                $item = html_writer::div(
+                    html_writer::div(s($condition->get_name()), 'fw-semibold') .
+                    html_writer::div(get_string('pickcondition_hint', 'tool_murules'), 'small text-muted'),
+                    'me-auto'
+                );
+                $item .= html_writer::span(get_string('pickcondition', 'tool_murules'), 'btn btn-sm btn-outline-primary');
+                $html .= html_writer::tag(
+                    'li',
+                    html_writer::link($url, $item, [
+                        'class' => 'list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-2 tool_murules-picker-item',
+                    ]),
+                    ['class' => 'p-0 border-0']
+                );
+            }
+            $html .= html_writer::end_tag('ul');
+            $html .= html_writer::end_div();
+            $html .= html_writer::end_div();
+            $html .= html_writer::end_div();
+        }
+        $html .= html_writer::end_div();
+        return $html;
     }
 
     /**

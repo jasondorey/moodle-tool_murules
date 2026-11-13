@@ -35,6 +35,10 @@ class user_last_login extends base {
         return get_string('condition:user_last_login', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'user';
+    }
+
     public function get_description(array $config): string {
         return get_string('condition:user_last_login_desc', 'tool_murules', (object)[
             'window' => helper::describe_time_window($config),

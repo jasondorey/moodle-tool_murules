@@ -35,6 +35,10 @@ class cohort_member extends base {
         return get_string('condition:cohort_member', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'cohort';
+    }
+
     public function get_description(array $config): string {
         $a = (object)[
             'cohort' => helper::cohort_name((int)($config['cohortid'] ?? 0)),

@@ -42,7 +42,7 @@ abstract class base {
     abstract public function get_name(): string;
 
     /**
-     * Category key: general|local.
+     * Picker / menu category key (enrollment, course, activity, …).
      *
      * @return string
      */

@@ -35,6 +35,10 @@ class course_not_completed extends base {
         return get_string('condition:course_not_completed', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'course';
+    }
+
     public function get_description(array $config): string {
         return get_string('condition:course_not_completed_desc', 'tool_murules', (object)[
             'course' => helper::course_name((int)($config['courseid'] ?? 0)),

@@ -56,3 +56,25 @@
 .tool_murules-action-empty {
     margin: 0.35rem 0 0;
 }
+
+.tool_murules-event-picker {
+    max-width: 42rem;
+}
+
+.tool_murules-picker-category .accordion-button {
+    font-weight: 600;
+}
+
+.tool_murules-picker-item {
+    text-decoration: none;
+    color: inherit;
+}
+
+.tool_murules-picker-item:hover,
+.tool_murules-picker-item:focus {
+    background-color: var(--bs-secondary-bg, #f8f9fa);
+}
+
+.tool_murules-wizard-next {
+    margin-top: 0.15rem;
+}

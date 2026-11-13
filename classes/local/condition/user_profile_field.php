@@ -41,6 +41,10 @@ class user_profile_field extends base {
         return get_string('condition:user_profile_field', 'tool_murules');
     }
 
+    public function get_category(): string {
+        return 'user';
+    }
+
     public function get_description(array $config): string {
         $field = (string)($config['fieldid'] ?? '');
         $op = (string)($config['op'] ?? 'eq');

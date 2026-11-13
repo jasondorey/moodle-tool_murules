@@ -37,7 +37,7 @@ class activity_completed extends base {
     }
 
     public function get_category(): string {
-        return 'local';
+        return 'activity';
     }
 
     public function get_description(array $config): string {
