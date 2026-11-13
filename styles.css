@@ -12,6 +12,14 @@
     border-left-width: 0.25rem;
 }
 
+.tool_murules-rule-accordion-btn {
+    font-weight: inherit;
+}
+
+.tool_murules-rule-accordion-btn:not(.collapsed) {
+    background-color: var(--bs-secondary-bg, #f8f9fa);
+}
+
 .tool_murules-wizard-steps {
     margin-bottom: 1rem;
 }

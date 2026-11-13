@@ -68,11 +68,9 @@
         {{/filterempty}}
         {{#hasvisible}}
             <p class="text-muted small mb-2" aria-live="polite">{{resultcount}}</p>
-            <div class="tool_murules-cards" role="list">
+            <div class="accordion tool_murules-cards" id="tool_murules_rules_accordion" role="list">
                 {{#rules}}
-                    <div role="listitem" class="mb-3">
-                        {{> tool_murules/rule_card}}
-                    </div>
+                    {{> tool_murules/rule_card}}
                 {{/rules}}
             </div>
         {{/hasvisible}}

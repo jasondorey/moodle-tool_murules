@@ -1,47 +1,66 @@
 {{!
     @template tool_murules/rule_card
 
-    Single rule card using Bootstrap card + badges.
+    Accordion rule row: collapsed header shows title + status;
+    expand for WHEN/THEN/stats/actions.
 }}
-<article class="card tool_murules-card{{#broken}} border-danger{{/broken}}" aria-labelledby="tool_murules_rule_{{id}}_title">
-    <div class="card-body">
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
-            <h3 class="h5 card-title mb-0" id="tool_murules_rule_{{id}}_title">{{name}}</h3>
-            <div class="d-flex flex-wrap gap-1">
-                {{#enabled}}
-                    <span class="badge text-bg-success">{{#str}} ruleenabled, tool_murules {{/str}}</span>
-                {{/enabled}}
-                {{^enabled}}
-                    <span class="badge text-bg-secondary">{{#str}} ruledisabled, tool_murules {{/str}}</span>
-                {{/enabled}}
-                {{#broken}}
-                    <span class="badge text-bg-danger">{{#str}} rulebroken, tool_murules {{/str}}</span>
-                {{/broken}}
+<div class="accordion-item tool_murules-card{{#broken}} border-danger{{/broken}}" role="listitem">
+    <h3 class="accordion-header" id="tool_murules_rule_{{id}}_heading">
+        <button
+            class="accordion-button collapsed tool_murules-rule-accordion-btn"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#tool_murules_rule_{{id}}_body"
+            aria-expanded="false"
+            aria-controls="tool_murules_rule_{{id}}_body"
+        >
+            <span class="d-flex flex-wrap align-items-center justify-content-between gap-2 w-100 pe-2">
+                <span class="fw-semibold text-start" id="tool_murules_rule_{{id}}_title">{{name}}</span>
+                <span class="d-flex flex-wrap gap-1">
+                    {{#enabled}}
+                        <span class="badge text-bg-success">{{#str}} ruleenabled, tool_murules {{/str}}</span>
+                    {{/enabled}}
+                    {{^enabled}}
+                        <span class="badge text-bg-secondary">{{#str}} ruledisabled, tool_murules {{/str}}</span>
+                    {{/enabled}}
+                    {{#broken}}
+                        <span class="badge text-bg-danger">{{#str}} rulebroken, tool_murules {{/str}}</span>
+                    {{/broken}}
+                </span>
+            </span>
+        </button>
+    </h3>
+    <div
+        id="tool_murules_rule_{{id}}_body"
+        class="accordion-collapse collapse"
+        aria-labelledby="tool_murules_rule_{{id}}_heading"
+        data-bs-parent="#tool_murules_rules_accordion"
+    >
+        <div class="accordion-body">
+            <div class="row g-2 mb-2 tool_murules-flow">
+                <div class="col-md">
+                    <div class="small text-muted text-uppercase">{{#str}} when, tool_murules {{/str}}</div>
+                    <div>{{when}}</div>
+                </div>
+                <div class="col-auto d-none d-md-flex align-items-center text-muted" aria-hidden="true">→</div>
+                <div class="col-md">
+                    <div class="small text-muted text-uppercase">{{#str}} then, tool_murules {{/str}}</div>
+                    <div>{{then}}</div>
+                </div>
             </div>
-        </div>
-        <div class="row g-2 mb-2 tool_murules-flow">
-            <div class="col-md">
-                <div class="small text-muted text-uppercase">{{#str}} when, tool_murules {{/str}}</div>
-                <div>{{when}}</div>
+            <div class="small text-muted mb-3">
+                <div{{#statsempty}} class="fst-italic"{{/statsempty}}>{{stats}}</div>
+                <div{{^haslastapplied}} class="fst-italic"{{/haslastapplied}}>{{lastapplied}}</div>
             </div>
-            <div class="col-auto d-none d-md-flex align-items-center text-muted" aria-hidden="true">→</div>
-            <div class="col-md">
-                <div class="small text-muted text-uppercase">{{#str}} then, tool_murules {{/str}}</div>
-                <div>{{then}}</div>
+            <div class="d-flex flex-wrap gap-2" role="group" aria-labelledby="tool_murules_rule_{{id}}_title">
+                <a class="btn btn-secondary btn-sm" href="{{editurl}}" title="{{editlabel}}" aria-label="{{editlabel}}">{{#str}} edit {{/str}}</a>
+                <a class="btn btn-secondary btn-sm" href="{{toggleurl}}" title="{{togglelabel}}" aria-label="{{togglelabel}}">
+                    {{#enabled}}{{#str}} disablerule, tool_murules {{/str}}{{/enabled}}
+                    {{^enabled}}{{#str}} enablerule, tool_murules {{/str}}{{/enabled}}
+                </a>
+                <a class="btn btn-secondary btn-sm" href="{{logurl}}" title="{{loglabel}}" aria-label="{{loglabel}}">{{#str}} viewlog, tool_murules {{/str}}</a>
+                <a class="btn btn-outline-danger btn-sm" href="{{deleteurl}}" title="{{deletelabel}}" aria-label="{{deletelabel}}">{{#str}} delete {{/str}}</a>
             </div>
-        </div>
-        <div class="small text-muted mb-3">
-            <div{{#statsempty}} class="fst-italic"{{/statsempty}}>{{stats}}</div>
-            <div{{^haslastapplied}} class="fst-italic"{{/haslastapplied}}>{{lastapplied}}</div>
-        </div>
-        <div class="d-flex flex-wrap gap-2" role="group" aria-labelledby="tool_murules_rule_{{id}}_title">
-            <a class="btn btn-secondary btn-sm" href="{{editurl}}" title="{{editlabel}}" aria-label="{{editlabel}}">{{#str}} edit {{/str}}</a>
-            <a class="btn btn-secondary btn-sm" href="{{toggleurl}}" title="{{togglelabel}}" aria-label="{{togglelabel}}">
-                {{#enabled}}{{#str}} disablerule, tool_murules {{/str}}{{/enabled}}
-                {{^enabled}}{{#str}} enablerule, tool_murules {{/str}}{{/enabled}}
-            </a>
-            <a class="btn btn-secondary btn-sm" href="{{logurl}}" title="{{loglabel}}" aria-label="{{loglabel}}">{{#str}} viewlog, tool_murules {{/str}}</a>
-            <a class="btn btn-outline-danger btn-sm" href="{{deleteurl}}" title="{{deletelabel}}" aria-label="{{deletelabel}}">{{#str}} delete {{/str}}</a>
         </div>
     </div>
-</article>
+</div>

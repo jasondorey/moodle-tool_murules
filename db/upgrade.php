@@ -240,5 +240,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111342, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111343) {
+        // Rules list accordion: collapsed title+status; expand for detail.
+        upgrade_plugin_savepoint(true, 2026111343, 'tool', 'murules');
+    }
+
     return true;
 }
