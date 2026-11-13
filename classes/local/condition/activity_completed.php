@@ -64,7 +64,7 @@ class activity_completed extends base {
         $options = [0 => get_string('choosedots')];
         $courseid = (int)($config['courseid'] ?? 0);
         if ($courseid) {
-            $options += $this->get_activity_options($courseid);
+            $options += \tool_murules\local\course_modules::options_map($courseid, 'activity');
         }
         $mform->addElement('select', 'ac_cmid', get_string('activity', 'tool_murules'), $options);
         $mform->addRule('ac_cmid', get_string('error_noactivity', 'tool_murules'), 'required', null, 'client');
@@ -186,44 +186,6 @@ class activity_completed extends base {
             }
         }
         return $out;
-    }
-
-    /**
-     * @param int $courseid
-     * @return array<int, string>
-     */
-    protected function get_activity_options(int $courseid): array {
-        global $DB;
-        $sql = "SELECT cm.id, m.name AS modname, COALESCE(q.name, a.name, p.name, r.name, f.name, cm.id) AS activityname
-                  FROM {course_modules} cm
-                  JOIN {modules} m ON m.id = cm.module
-             LEFT JOIN {quiz} q ON m.name = 'quiz' AND q.id = cm.instance
-             LEFT JOIN {assign} a ON m.name = 'assign' AND a.id = cm.instance
-             LEFT JOIN {page} p ON m.name = 'page' AND p.id = cm.instance
-             LEFT JOIN {resource} r ON m.name = 'resource' AND r.id = cm.instance
-             LEFT JOIN {forum} f ON m.name = 'forum' AND f.id = cm.instance
-                 WHERE cm.course = :courseid AND cm.deletioninprogress = 0 AND cm.completion > 0
-              ORDER BY activityname ASC";
-        // Prefer generic lookup via get_fast_modinfo when available.
-        try {
-            $modinfo = get_fast_modinfo($courseid);
-            $options = [];
-            foreach ($modinfo->get_cms() as $cm) {
-                if ((int)$cm->completion === 0 || $cm->deletioninprogress) {
-                    continue;
-                }
-                $options[(int)$cm->id] = $cm->get_formatted_name() . ' (' . $cm->modname . ')';
-            }
-            asort($options, SORT_NATURAL | SORT_FLAG_CASE);
-            return $options;
-        } catch (\Throwable $e) {
-            $records = $DB->get_records_sql($sql, ['courseid' => $courseid]);
-            $options = [];
-            foreach ($records as $rec) {
-                $options[(int)$rec->id] = format_string((string)$rec->activityname) . ' (' . $rec->modname . ')';
-            }
-            return $options;
-        }
     }
 
     /**

@@ -213,6 +213,60 @@ final class engine {
     }
 
     /**
+     * Estimate how many users currently match a condition config.
+     *
+     * Caps the scan at $limit and reports whether the result was truncated.
+     *
+     * @param string $conditiontype
+     * @param array $config
+     * @param int $limit
+     * @return array{count:int, capped:bool, broken:bool, limit:int}
+     */
+    public static function estimate_matching_users(string $conditiontype, array $config, int $limit = 500): array {
+        $limit = max(1, $limit);
+        $condition = registry::get_condition($conditiontype);
+        if (!$condition) {
+            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
+        }
+        if ($condition->is_broken($config)) {
+            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
+        }
+        try {
+            $ids = $condition->get_matching_user_ids($config, $limit + 1, 0);
+        } catch (\Throwable $e) {
+            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
+        }
+        $n = count($ids);
+        return [
+            'count' => min($n, $limit),
+            'capped' => $n > $limit,
+            'broken' => false,
+            'limit' => $limit,
+        ];
+    }
+
+    /**
+     * Human label for {@see estimate_matching_users()}.
+     *
+     * @param array $estimate
+     * @return string
+     */
+    public static function format_matching_estimate(array $estimate): string {
+        if (!empty($estimate['broken'])) {
+            return get_string('matchingusers_estimate_broken', 'tool_murules');
+        }
+        $count = (int)($estimate['count'] ?? 0);
+        if ($count <= 0) {
+            return get_string('matchingusers_estimate_none', 'tool_murules');
+        }
+        $a = (object)['count' => $count, 'limit' => (int)($estimate['limit'] ?? $count)];
+        if (!empty($estimate['capped'])) {
+            return get_string('matchingusers_estimate_capped', 'tool_murules', $a);
+        }
+        return get_string('matchingusers_estimate', 'tool_murules', $a);
+    }
+
+    /**
      * Scan all enabled scheduled conditions.
      */
     public static function run_scheduled(): void {

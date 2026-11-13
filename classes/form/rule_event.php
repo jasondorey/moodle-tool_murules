@@ -53,15 +53,15 @@ class rule_event extends \moodleform {
                 break;
             }
         }
-        // Render elements for all available conditions; hide via disabledIf.
+        // Render elements for all available conditions; AMD shows only the selected panel.
         foreach (registry::get_conditions() as $type => $condition) {
             if (!$condition->is_available()) {
                 continue;
             }
             $mform->addElement('header', 'hdr_' . $type, $condition->get_name());
+            $mform->setExpanded('hdr_' . $type, $type === $selected);
             $cfg = ($type === $conditiontype) ? $conditionconfig : [];
             $condition->add_config_form_elements($mform, $cfg);
-            // Keep headers expanded only for selected type is hard in classic forms;
             // validate/extract only the selected type on submit.
         }
 

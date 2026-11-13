@@ -60,6 +60,14 @@ class rule_review extends \moodleform {
         if (!empty($custom['then_summary'])) {
             $mform->addElement('static', 'then_summary', get_string('then', 'tool_murules'), s($custom['then_summary']));
         }
+        if (array_key_exists('match_estimate_html', $custom)) {
+            $mform->addElement(
+                'static',
+                'match_estimate',
+                get_string('matchingusers', 'tool_murules'),
+                $custom['match_estimate_html']
+            );
+        }
 
         $this->add_action_buttons(true, get_string('save', 'tool_murules'));
     }

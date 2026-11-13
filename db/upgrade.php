@@ -38,5 +38,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Wave C: MuTMS conditions/actions + message provider (no schema change).
         upgrade_plugin_savepoint(true, 2026111302, 'tool', 'murules');
     }
+    if ($oldversion < 2026111303) {
+        // Wizard polish: course→CM AJAX webservice + Review matching estimate.
+        upgrade_plugin_savepoint(true, 2026111303, 'tool', 'murules');
+    }
     return true;
 }

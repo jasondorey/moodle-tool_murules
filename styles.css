@@ -138,3 +138,16 @@
     color: #0f5c63;
     font-weight: 650;
 }
+
+fieldset.tool_murules-condition-hidden,
+fieldset.tool_murules-condition-hidden[hidden] {
+    display: none !important;
+}
+
+.tool_murules-match-estimate {
+    display: inline-block;
+    padding: 0.35rem 0.55rem;
+    background: #f3f6f8;
+    border-left: 3px solid #0f5c63;
+    color: #1c2430;
+}

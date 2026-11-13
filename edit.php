@@ -86,6 +86,7 @@ if ($step === 'event') {
             'step' => 'actions',
         ]));
     }
+    $PAGE->requires->js_call_amd('tool_murules/wizard_event', 'init');
     echo $OUTPUT->header();
     echo $renderer->wizard_steps('event');
     echo $OUTPUT->heading(get_string('wizard_event', 'tool_murules'), 3);
@@ -134,6 +135,15 @@ if (empty($draft['conditiontype']) || empty($draft['actiontype'])) {
 
 $condition = \tool_murules\local\registry::get_condition($draft['conditiontype']);
 $action = \tool_murules\local\registry::get_action($draft['actiontype']);
+$estimate = \tool_murules\local\engine::estimate_matching_users(
+    (string)$draft['conditiontype'],
+    $draft['conditionconfig'] ?? [],
+    500
+);
+$estimatehtml = html_writer::span(
+    \tool_murules\local\engine::format_matching_estimate($estimate),
+    'tool_murules-match-estimate'
+);
 $form = new \tool_murules\form\rule_review(null, [
     'name' => $draft['name'] ?? '',
     'enabled' => $draft['enabled'] ?? 1,
@@ -141,6 +151,7 @@ $form = new \tool_murules\form\rule_review(null, [
     'includesuspended' => $draft['includesuspended'] ?? 0,
     'when_summary' => $condition ? $condition->get_description($draft['conditionconfig'] ?? []) : '',
     'then_summary' => $action ? $action->get_description($draft['actionconfig'] ?? []) : '',
+    'match_estimate_html' => $estimatehtml,
 ]);
 $form->set_data([
     'id' => $id,

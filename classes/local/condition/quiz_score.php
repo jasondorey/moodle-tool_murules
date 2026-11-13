@@ -73,7 +73,7 @@ class quiz_score extends base {
         $quizoptions = [0 => get_string('choosedots')];
         $courseid = (int)($config['courseid'] ?? 0);
         if ($courseid) {
-            $quizoptions += $this->get_quiz_options($courseid);
+            $quizoptions += \tool_murules\local\course_modules::options_map($courseid, 'quiz');
         }
         $mform->addElement('select', 'qs_cmid', get_string('quiz', 'tool_murules'), $quizoptions);
         $mform->addRule('qs_cmid', get_string('error_noquiz', 'tool_murules'), 'required', null, 'client');
@@ -201,29 +201,6 @@ class quiz_score extends base {
             return true;
         }
         return !get_coursemodule_from_id('quiz', $cmid, $courseid, false);
-    }
-
-    /**
-     * @param int $courseid
-     * @return array<int, string>
-     */
-    protected function get_quiz_options(int $courseid): array {
-        global $DB;
-        $modid = $DB->get_field('modules', 'id', ['name' => 'quiz']);
-        if (!$modid) {
-            return [];
-        }
-        $sql = "SELECT cm.id, q.name
-                  FROM {course_modules} cm
-                  JOIN {quiz} q ON q.id = cm.instance
-                 WHERE cm.course = :courseid AND cm.module = :modid AND cm.deletioninprogress = 0
-              ORDER BY q.name ASC";
-        $records = $DB->get_records_sql($sql, ['courseid' => $courseid, 'modid' => $modid]);
-        $options = [];
-        foreach ($records as $rec) {
-            $options[(int)$rec->id] = format_string($rec->name);
-        }
-        return $options;
     }
 
     /**

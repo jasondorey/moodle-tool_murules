@@ -58,6 +58,14 @@ $string['wizard_event_help'] = 'Choose what must happen for this rule to match a
 $string['wizard_actions_help'] = 'Choose what happens when the condition matches.';
 $string['wizard_review_help'] = 'Name the rule, set limits, and save.';
 
+$string['matchingusers'] = 'Matching users';
+$string['matchingusers_estimate'] = '{$a->count} users currently match';
+$string['matchingusers_estimate_capped'] = 'At least {$a->count} users currently match (estimate capped at {$a->limit})';
+$string['matchingusers_estimate_none'] = 'No users currently match';
+$string['matchingusers_estimate_broken'] = 'Cannot estimate — condition references missing data';
+$string['loadingcms'] = 'Loading activities…';
+$string['nocms'] = 'No matching activities in this course';
+
 $string['conditiontype'] = 'Condition';
 $string['conditionconfig'] = 'Condition settings';
 $string['actiontype'] = 'Action';
