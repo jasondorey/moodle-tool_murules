@@ -30,9 +30,18 @@ admin_externalpage_setup('tool_murules_manage');
 require_capability('tool/murules:manage', context_system::instance());
 
 $id = required_param('id', PARAM_INT);
+$statusfilter = optional_param('status', 'all', PARAM_ALPHA);
+$allowedstatus = ['all', 'applied', 'skipped', 'failed'];
+if (!in_array($statusfilter, $allowedstatus, true)) {
+    $statusfilter = 'all';
+}
 $rulerec = \tool_murules\local\rule::get($id);
 
-$PAGE->set_url(new moodle_url('/admin/tool/murules/log.php', ['id' => $id]));
+$urlparams = ['id' => $id];
+if ($statusfilter !== 'all') {
+    $urlparams['status'] = $statusfilter;
+}
+$PAGE->set_url(new moodle_url('/admin/tool/murules/log.php', $urlparams));
 $PAGE->set_title(get_string('rulelog', 'tool_murules'));
 $PAGE->set_heading(format_string($rulerec->name) . ' — ' . get_string('rulelog', 'tool_murules'));
 $PAGE->navbar->add(format_string($rulerec->name));
@@ -51,8 +60,15 @@ echo html_writer::div(
 
 $perpage = 50;
 $page = optional_param('page', 0, PARAM_INT);
-$total = $DB->count_records('tool_murules_match', ['ruleid' => $id]);
-if (!$total) {
+
+$counts = [
+    'all' => $DB->count_records('tool_murules_match', ['ruleid' => $id]),
+    'applied' => $DB->count_records('tool_murules_match', ['ruleid' => $id, 'status' => 'applied']),
+    'skipped' => $DB->count_records('tool_murules_match', ['ruleid' => $id, 'status' => 'skipped']),
+    'failed' => $DB->count_records('tool_murules_match', ['ruleid' => $id, 'status' => 'failed']),
+];
+
+if (!$counts['all']) {
     echo html_writer::div(
         html_writer::tag('h3', get_string('nologentries_title', 'tool_murules'), ['class' => 'tool_murules-empty-title']) .
         html_writer::tag('p', get_string('nologentries', 'tool_murules'), ['class' => 'tool_murules-empty-body']) .
@@ -63,9 +79,58 @@ if (!$total) {
     exit;
 }
 
-$records = $DB->get_records('tool_murules_match', ['ruleid' => $id], 'timecreated DESC, id DESC', '*', $page * $perpage, $perpage);
+$filterhtml = html_writer::start_tag('nav', [
+    'class' => 'tool_murules-filters tool_murules-log-filters mb-3',
+    'aria-label' => get_string('log_filter_label', 'tool_murules'),
+]);
+foreach ($allowedstatus as $key) {
+    $params = ['id' => $id];
+    if ($key !== 'all') {
+        $params['status'] = $key;
+    }
+    $classes = 'tool_murules-filter';
+    if ($key === $statusfilter) {
+        $classes .= ' is-selected';
+    }
+    $label = get_string('log_filter_' . $key, 'tool_murules');
+    $filterhtml .= html_writer::link(
+        new moodle_url('/admin/tool/murules/log.php', $params),
+        $label . ' ' . html_writer::span((string)$counts[$key], 'tool_murules-filter-count'),
+        ['class' => $classes] + ($key === $statusfilter ? ['aria-current' => 'page'] : [])
+    );
+}
+$filterhtml .= html_writer::end_tag('nav');
+echo $filterhtml;
+
+$params = ['ruleid' => $id];
+$wheresql = 'ruleid = :ruleid';
+if ($statusfilter !== 'all') {
+    $wheresql .= ' AND status = :status';
+    $params['status'] = $statusfilter;
+}
+$total = (int)$DB->count_records_select('tool_murules_match', $wheresql, $params);
+if (!$total) {
+    echo html_writer::div(
+        html_writer::tag('h3', get_string('log_filter_empty_title', 'tool_murules'), ['class' => 'tool_murules-empty-title']) .
+        html_writer::tag('p', get_string('log_filter_empty', 'tool_murules'), ['class' => 'tool_murules-empty-body']),
+        'tool_murules-empty'
+    );
+    echo $OUTPUT->footer();
+    exit;
+}
+
+$records = $DB->get_records_select(
+    'tool_murules_match',
+    $wheresql,
+    $params,
+    'timecreated DESC, id DESC',
+    '*',
+    $page * $perpage,
+    $perpage
+);
 
 $table = new html_table();
+$table->attributes['class'] = 'generaltable tool_murules-log-table';
 $table->head = [
     get_string('time', 'tool_murules'),
     get_string('user', 'tool_murules'),

@@ -4,6 +4,13 @@
     Overview WHEN→THEN rule cards with status filters.
 }}
 <div class="tool_murules-overview">
+    {{#killswitch}}
+        <div class="tool_murules-banner tool_murules-banner-warn" role="status">
+            <strong>{{#str}} killswitch_banner_title, tool_murules {{/str}}</strong>
+            <span>{{#str}} killswitch_banner, tool_murules {{/str}}</span>
+            <a href="{{settingsurl}}">{{#str}} killswitch_banner_link, tool_murules {{/str}}</a>
+        </div>
+    {{/killswitch}}
     <div class="tool_murules-toolbar">
         <nav class="tool_murules-filters" aria-label="{{#str}} filter_label, tool_murules {{/str}}">
             {{#filters}}

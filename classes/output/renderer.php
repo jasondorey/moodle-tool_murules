@@ -117,6 +117,8 @@ class renderer extends plugin_renderer_base {
             ];
         }
 
+        $settingsurl = (new \moodle_url('/admin/settings.php', ['section' => 'tool_murules_settings']))->out(false);
+
         return $this->render_from_template('tool_murules/rule_cards', [
             'hasrules' => !empty($all),
             'hasvisible' => !empty($rules),
@@ -124,6 +126,8 @@ class renderer extends plugin_renderer_base {
             'filters' => $filters,
             'filterempty' => empty($rules) && !empty($all),
             'createurl' => (new \moodle_url('/admin/tool/murules/edit.php'))->out(false),
+            'killswitch' => \tool_murules\local\engine::is_killed(),
+            'settingsurl' => $settingsurl,
         ]);
     }
 
