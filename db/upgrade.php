@@ -154,5 +154,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Sticky log table header inside scroll region.
         upgrade_plugin_savepoint(true, 2026111331, 'tool', 'murules');
     }
+    if ($oldversion < 2026111332) {
+        // Card "No matches yet" when match stats are all zero.
+        upgrade_plugin_savepoint(true, 2026111332, 'tool', 'murules');
+    }
     return true;
 }

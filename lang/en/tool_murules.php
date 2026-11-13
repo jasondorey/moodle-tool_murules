@@ -62,6 +62,7 @@ $string['rulebroken'] = 'Broken';
 $string['when'] = 'WHEN';
 $string['then'] = 'THEN';
 $string['matchstats'] = '{$a->applied} applied · {$a->skipped} skipped · {$a->failed} failed';
+$string['matchstats_none'] = 'No matches yet';
 $string['lastapplied'] = 'Last applied {$a}';
 $string['neverapplied'] = 'Not applied yet';
 $string['editrule_action'] = 'Edit {$a}';

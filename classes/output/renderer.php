@@ -83,6 +83,7 @@ class renderer extends plugin_renderer_base {
                 }
             }
             $stats = rule::get_match_stats((int)$rec->id);
+            $statstotal = (int)$stats['applied'] + (int)$stats['skipped'] + (int)$stats['failed'];
             $lastts = isset($lastapplied[$rec->id]) ? (int)$lastapplied[$rec->id] : 0;
             $card = [
                 'id' => (int)$rec->id,
@@ -92,7 +93,10 @@ class renderer extends plugin_renderer_base {
                 'broken' => $broken,
                 'when' => $when,
                 'then' => implode('; ', $thenparts),
-                'stats' => get_string('matchstats', 'tool_murules', (object)$stats),
+                'stats' => $statstotal > 0
+                    ? get_string('matchstats', 'tool_murules', (object)$stats)
+                    : get_string('matchstats_none', 'tool_murules'),
+                'statsempty' => $statstotal === 0,
                 'haslastapplied' => $lastts > 0,
                 'lastapplied' => $lastts > 0
                     ? get_string('lastapplied', 'tool_murules', userdate($lastts, get_string('strftimedatetimeshort', 'langconfig')))

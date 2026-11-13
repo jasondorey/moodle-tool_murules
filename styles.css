@@ -230,6 +230,11 @@
     font-style: italic;
 }
 
+.tool_murules-stats-empty {
+    color: var(--murules-muted);
+    font-style: italic;
+}
+
 .tool_murules-actions {
     margin-top: 0.85rem;
     display: flex;
