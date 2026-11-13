@@ -85,6 +85,7 @@ class renderer extends plugin_renderer_base {
             $stats = rule::get_match_stats((int)$rec->id);
             $lastts = isset($lastapplied[$rec->id]) ? (int)$lastapplied[$rec->id] : 0;
             $card = [
+                'id' => (int)$rec->id,
                 'name' => format_string($rec->name),
                 'nametext' => \core_text::strtolower((string)$rec->name),
                 'enabled' => $enabled,

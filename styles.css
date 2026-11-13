@@ -139,14 +139,21 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
     padding: 0.15rem 0.45rem;
-    border: 1px solid var(--murules-line);
-    color: var(--murules-muted);
+    border: 1px solid #8a93a0;
+    color: #3d4654;
+    background: #eef1f4;
 }
 
 .tool_murules-badge.is-enabled {
     border-color: #1a6a42;
     color: #145536;
     background: #e7f5ee;
+}
+
+.tool_murules-badge.is-disabled {
+    border-color: #8a93a0;
+    color: #3d4654;
+    background: #eef1f4;
 }
 
 .tool_murules-badge.is-broken {

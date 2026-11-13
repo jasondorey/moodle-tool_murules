@@ -1,11 +1,11 @@
 {{!
     @template tool_murules/rule_card
 }}
-<article class="tool_murules-card {{#broken}}is-broken{{/broken}}">
+<article class="tool_murules-card {{#broken}}is-broken{{/broken}}" aria-labelledby="tool_murules_rule_{{id}}_title">
     <div class="tool_murules-card-head">
-        <h3 class="tool_murules-card-title">{{name}}</h3>
+        <h3 class="tool_murules-card-title" id="tool_murules_rule_{{id}}_title">{{name}}</h3>
         <div class="tool_murules-badges">
-            <span class="tool_murules-badge {{#enabled}}is-enabled{{/enabled}}">
+            <span class="tool_murules-badge {{#enabled}}is-enabled{{/enabled}}{{^enabled}}is-disabled{{/enabled}}">
                 {{#enabled}}{{#str}} ruleenabled, tool_murules {{/str}}{{/enabled}}
                 {{^enabled}}{{#str}} ruledisabled, tool_murules {{/str}}{{/enabled}}
             </span>
@@ -29,7 +29,7 @@
         <div>{{stats}}</div>
         <div class="tool_murules-lastapplied{{^haslastapplied}} is-never{{/haslastapplied}}">{{lastapplied}}</div>
     </div>
-    <div class="tool_murules-actions">
+    <div class="tool_murules-actions" role="group" aria-labelledby="tool_murules_rule_{{id}}_title">
         <a class="btn btn-secondary btn-sm" href="{{editurl}}" title="{{editlabel}}" aria-label="{{editlabel}}">{{#str}} edit {{/str}}</a>
         <a class="btn btn-secondary btn-sm" href="{{toggleurl}}" title="{{togglelabel}}" aria-label="{{togglelabel}}">
             {{#enabled}}{{#str}} disablerule, tool_murules {{/str}}{{/enabled}}

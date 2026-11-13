@@ -142,5 +142,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Stronger contrast for log status + card enabled/broken badges.
         upgrade_plugin_savepoint(true, 2026111328, 'tool', 'murules');
     }
+    if ($oldversion < 2026111329) {
+        // Disabled badge fill + card/actions labelledby a11y.
+        upgrade_plugin_savepoint(true, 2026111329, 'tool', 'murules');
+    }
     return true;
 }
