@@ -57,9 +57,32 @@ if ($action && $id) {
             \tool_murules\local\rule::delete($id);
             redirect(new moodle_url('/admin/tool/murules/index.php', $returnparams));
         }
+        $condition = \tool_murules\local\registry::get_condition($rulerec->conditiontype);
+        $config = \tool_murules\local\rule::condition_config($rulerec);
+        $when = $condition ? $condition->get_description($config) : $rulerec->conditiontype;
+        $thenparts = [];
+        foreach (\tool_murules\local\rule::get_actions((int)$rulerec->id) as $actionrec) {
+            $action = \tool_murules\local\registry::get_action($actionrec->actiontype);
+            if ($action) {
+                $thenparts[] = $action->get_description(
+                    \tool_murules\local\action\base::decode_config($actionrec->actionconfig)
+                );
+            } else {
+                $thenparts[] = $actionrec->actiontype;
+            }
+        }
+        $then = $thenparts ? implode('; ', $thenparts) : '—';
+        $confirmmsg = get_string('deleteruleconfirm', 'tool_murules', (object)[
+            'name' => format_string($rulerec->name),
+        ]);
+        $confirmmsg .= html_writer::div(
+            html_writer::div(get_string('deleteruleconfirm_when', 'tool_murules', $when), 'tool_murules-delete-when') .
+            html_writer::div(get_string('deleteruleconfirm_then', 'tool_murules', $then), 'tool_murules-delete-then'),
+            'tool_murules-delete-recap mt-3'
+        );
         echo $OUTPUT->header();
         echo $OUTPUT->confirm(
-            get_string('deleteruleconfirm', 'tool_murules', format_string($rulerec->name)),
+            $confirmmsg,
             new moodle_url('/admin/tool/murules/index.php', array_merge($returnparams, [
                 'action' => 'delete',
                 'id' => $id,

@@ -245,6 +245,23 @@
     font-size: 0.9rem;
 }
 
+.tool_murules-delete-recap {
+    padding: 0.75rem 0.9rem;
+    border-left: 3px solid #0f5c63;
+    background: #f3f6f8;
+    color: #1c2430;
+    font-size: 0.95rem;
+}
+
+.tool_murules-delete-when {
+    color: #0f5c63;
+    margin-bottom: 0.35rem;
+}
+
+.tool_murules-delete-then {
+    color: #6b3f1d;
+}
+
 .tool_murules-wizard-steps-list {
     display: flex;
     gap: 0.75rem;
