@@ -71,8 +71,11 @@ $string['filter_broken'] = 'Broken';
 $string['filter_empty_title'] = 'No rules in this filter';
 $string['filter_empty'] = 'Try another filter, or create a new rule.';
 $string['noprograms_manual'] = 'No programs with a manual allocation source are available. Create a MuTMS program with a manual source first.';
+$string['nocohorts'] = 'No cohorts are available yet. Create a cohort first, then return to configure this action.';
 $string['program_allocate'] = 'Program';
 $string['program_allocate_help'] = 'Only programs that have a manual allocation source can be used. The rule allocates matching users through that source.';
+$string['program_deallocate'] = 'Program';
+$string['program_deallocate_help'] = 'Only removes allocations that this Rules plugin previously created for the user on the selected program.';
 
 $string['matchingusers'] = 'Matching users';
 $string['matchingusers_estimate'] = '{$a->count} users currently match';

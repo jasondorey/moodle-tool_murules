@@ -42,7 +42,15 @@ class cohort_add extends base {
     }
 
     public function add_config_form_elements(MoodleQuickForm $mform, array $config = []): void {
-        $options = [0 => get_string('choosedots')] + helper::cohort_options();
+        $cohorts = helper::cohort_options();
+        if (!$cohorts) {
+            $mform->addElement('static', 'ca_nocohorts', get_string('cohort', 'tool_murules'),
+                get_string('nocohorts', 'tool_murules'));
+            $mform->addElement('hidden', 'ca_cohortid', 0);
+            $mform->setType('ca_cohortid', PARAM_INT);
+            return;
+        }
+        $options = [0 => get_string('choosedots')] + $cohorts;
         $mform->addElement('select', 'ca_cohortid', get_string('cohort', 'tool_murules'), $options);
         $mform->addRule('ca_cohortid', get_string('error_nocohort', 'tool_murules'), 'required', null, 'client');
         if (!empty($config['cohortid'])) {

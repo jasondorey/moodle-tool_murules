@@ -47,9 +47,18 @@ class deallocate_muprog extends base {
     }
 
     public function add_config_form_elements(MoodleQuickForm $mform, array $config = []): void {
-        $options = [0 => get_string('choosedots')] + helper::program_options();
+        $programs = helper::program_options();
+        if (!$programs) {
+            $mform->addElement('static', 'dm_noprograms', get_string('program', 'tool_murules'),
+                get_string('noprograms_manual', 'tool_murules'));
+            $mform->addElement('hidden', 'dm_programid', 0);
+            $mform->setType('dm_programid', PARAM_INT);
+            return;
+        }
+        $options = [0 => get_string('choosedots')] + $programs;
         $mform->addElement('select', 'dm_programid', get_string('program', 'tool_murules'), $options);
         $mform->addRule('dm_programid', get_string('error_noprogram', 'tool_murules'), 'required', null, 'client');
+        $mform->addHelpButton('dm_programid', 'program_deallocate', 'tool_murules');
         if (!empty($config['programid'])) {
             $mform->setDefault('dm_programid', (int)$config['programid']);
         }

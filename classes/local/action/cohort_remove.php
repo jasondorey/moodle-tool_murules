@@ -42,7 +42,15 @@ class cohort_remove extends base {
     }
 
     public function add_config_form_elements(MoodleQuickForm $mform, array $config = []): void {
-        $options = [0 => get_string('choosedots')] + helper::cohort_options();
+        $cohorts = helper::cohort_options();
+        if (!$cohorts) {
+            $mform->addElement('static', 'cr_nocohorts', get_string('cohort', 'tool_murules'),
+                get_string('nocohorts', 'tool_murules'));
+            $mform->addElement('hidden', 'cr_cohortid', 0);
+            $mform->setType('cr_cohortid', PARAM_INT);
+            return;
+        }
+        $options = [0 => get_string('choosedots')] + $cohorts;
         $mform->addElement('select', 'cr_cohortid', get_string('cohort', 'tool_murules'), $options);
         $mform->addRule('cr_cohortid', get_string('error_nocohort', 'tool_murules'), 'required', null, 'client');
         if (!empty($config['cohortid'])) {

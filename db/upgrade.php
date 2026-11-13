@@ -66,5 +66,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Review help buttons, overview lead copy, log profile links.
         upgrade_plugin_savepoint(true, 2026111309, 'tool', 'murules');
     }
+    if ($oldversion < 2026111310) {
+        // Empty-state hints for deallocate/cohort actions.
+        upgrade_plugin_savepoint(true, 2026111310, 'tool', 'murules');
+    }
     return true;
 }
