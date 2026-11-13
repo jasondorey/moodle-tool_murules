@@ -86,5 +86,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Overview settings link + matching-estimate note on Review.
         upgrade_plugin_savepoint(true, 2026111314, 'tool', 'murules');
     }
+    if ($oldversion < 2026111315) {
+        // Overview banner when realtime observers are disabled.
+        upgrade_plugin_savepoint(true, 2026111315, 'tool', 'murules');
+    }
     return true;
 }

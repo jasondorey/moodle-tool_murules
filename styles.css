@@ -326,6 +326,11 @@
     background: #fbf7f0;
 }
 
+.tool_murules-banner-info {
+    border-left: 4px solid #0f5c63;
+    background: #f0f6f7;
+}
+
 .tool_murules-banner a {
     margin-left: auto;
 }

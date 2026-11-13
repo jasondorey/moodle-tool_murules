@@ -127,6 +127,8 @@ class renderer extends plugin_renderer_base {
             'filterempty' => empty($rules) && !empty($all),
             'createurl' => (new \moodle_url('/admin/tool/murules/edit.php'))->out(false),
             'killswitch' => \tool_murules\local\engine::is_killed(),
+            'observersoff' => !\tool_murules\local\engine::is_killed()
+                && !\tool_murules\local\engine::observers_enabled(),
             'settingsurl' => $settingsurl,
         ]);
     }
