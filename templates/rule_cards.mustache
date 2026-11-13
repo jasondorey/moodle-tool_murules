@@ -1,0 +1,20 @@
+{{!
+    @template tool_murules/rule_cards
+
+    Overview WHEN→THEN rule cards.
+}}
+<div class="tool_murules-overview">
+    <div class="tool_murules-toolbar">
+        <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
+    </div>
+    {{^hasrules}}
+        <p class="text-muted">{{#str}} norules, tool_murules {{/str}}</p>
+    {{/hasrules}}
+    {{#hasrules}}
+        <div class="tool_murules-cards">
+            {{#rules}}
+                {{> tool_murules/rule_card}}
+            {{/rules}}
+        </div>
+    {{/hasrules}}
+</div>

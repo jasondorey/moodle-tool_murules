@@ -1,0 +1,33 @@
+{{!
+    @template tool_murules/rule_card
+}}
+<article class="tool_murules-card">
+    <div class="tool_murules-card-head">
+        <h3 class="tool_murules-card-title">{{name}}</h3>
+        <span class="tool_murules-badge {{#enabled}}is-enabled{{/enabled}}">
+            {{#enabled}}{{#str}} ruleenabled, tool_murules {{/str}}{{/enabled}}
+            {{^enabled}}{{#str}} ruledisabled, tool_murules {{/str}}{{/enabled}}
+        </span>
+    </div>
+    <div class="tool_murules-flow">
+        <div class="tool_murules-when">
+            <span class="tool_murules-label">{{#str}} when, tool_murules {{/str}}</span>
+            <div>{{when}}</div>
+        </div>
+        <div class="tool_murules-arrow" aria-hidden="true">→</div>
+        <div class="tool_murules-then">
+            <span class="tool_murules-label">{{#str}} then, tool_murules {{/str}}</span>
+            <div>{{then}}</div>
+        </div>
+    </div>
+    <div class="tool_murules-stats">{{stats}}</div>
+    <div class="tool_murules-actions">
+        <a class="btn btn-secondary btn-sm" href="{{editurl}}">{{#str}} edit {{/str}}</a>
+        <a class="btn btn-secondary btn-sm" href="{{toggleurl}}">
+            {{#enabled}}{{#str}} disablerule, tool_murules {{/str}}{{/enabled}}
+            {{^enabled}}{{#str}} enablerule, tool_murules {{/str}}{{/enabled}}
+        </a>
+        <a class="btn btn-secondary btn-sm" href="{{logurl}}">{{#str}} viewlog, tool_murules {{/str}}</a>
+        <a class="btn btn-danger btn-sm" href="{{deleteurl}}">{{#str}} delete {{/str}}</a>
+    </div>
+</article>
