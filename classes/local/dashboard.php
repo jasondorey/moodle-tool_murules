@@ -33,9 +33,7 @@ final class dashboard {
     public static function rule_counts(): array {
         $counts = ['all' => 0, 'enabled' => 0, 'disabled' => 0, 'broken' => 0];
         foreach (rule::get_all() as $rec) {
-            $condition = registry::get_condition($rec->conditiontype);
-            $config = rule::condition_config($rec);
-            $broken = $condition ? $condition->is_broken($config) : true;
+            $broken = rule::is_broken($rec);
             $enabled = (int)$rec->enabled === 1;
             $counts['all']++;
             if ($enabled) {

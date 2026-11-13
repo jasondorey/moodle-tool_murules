@@ -31,21 +31,78 @@ require_capability('tool/murules:manage', context_system::instance());
 $id = optional_param('id', 0, PARAM_INT);
 $step = optional_param('step', 'event', PARAM_ALPHA);
 $pick = optional_param('pick', '', PARAM_ALPHANUMEXT);
+$removecond = optional_param('removecond', -1, PARAM_INT);
 $sesskeyname = 'tool_murules_wizard';
+
+/**
+ * Normalize draft conditions list and keep legacy keys in sync with the last/editing slot.
+ *
+ * @param array $draft
+ * @return array
+ */
+function tool_murules_normalize_draft_conditions(array $draft): array {
+    if (empty($draft['conditions']) || !is_array($draft['conditions'])) {
+        $draft['conditions'] = [];
+        if (!empty($draft['conditiontype'])) {
+            $draft['conditions'][] = [
+                'conditiontype' => (string)$draft['conditiontype'],
+                'conditionconfig' => $draft['conditionconfig'] ?? [],
+            ];
+        }
+    }
+    $clean = [];
+    foreach ($draft['conditions'] as $cond) {
+        if (is_object($cond)) {
+            $cond = (array)$cond;
+        }
+        if (empty($cond['conditiontype'])) {
+            continue;
+        }
+        $clean[] = [
+            'conditiontype' => (string)$cond['conditiontype'],
+            'conditionconfig' => is_array($cond['conditionconfig'] ?? null) ? $cond['conditionconfig'] : [],
+        ];
+    }
+    $draft['conditions'] = $clean;
+    if ($clean) {
+        $draft['conditiontype'] = $clean[0]['conditiontype'];
+        $draft['conditionconfig'] = $clean[0]['conditionconfig'];
+    }
+    return $draft;
+}
+
+/**
+ * WHEN summary for AND conditions.
+ *
+ * @param array $conditions
+ * @return string
+ */
+function tool_murules_when_summary(array $conditions): string {
+    $parts = [];
+    foreach ($conditions as $cond) {
+        $c = \tool_murules\local\registry::get_condition($cond['conditiontype'] ?? '');
+        if ($c) {
+            $parts[] = $c->get_description($cond['conditionconfig'] ?? []);
+        } else if (!empty($cond['conditiontype'])) {
+            $parts[] = (string)$cond['conditiontype'];
+        }
+    }
+    return $parts ? implode(' AND ', $parts) : '';
+}
 
 $draft = [];
 if ($id) {
     $rulerec = \tool_murules\local\rule::get($id);
     $actions = \tool_murules\local\rule::get_actions($id);
     $actionrec = reset($actions);
+    $conds = \tool_murules\local\rule::get_conditions_decoded($rulerec);
     $draft = [
         'id' => $id,
         'name' => $rulerec->name,
         'enabled' => (int)$rulerec->enabled,
         'actionlimit' => $rulerec->actionlimit,
         'includesuspended' => (int)$rulerec->includesuspended,
-        'conditiontype' => $rulerec->conditiontype,
-        'conditionconfig' => \tool_murules\local\rule::condition_config($rulerec),
+        'conditions' => $conds,
         'actiontype' => $actionrec->actiontype ?? 'allocate_muprog',
         'actionconfig' => \tool_murules\local\action\base::decode_config($actionrec->actionconfig ?? null),
     ];
@@ -58,14 +115,42 @@ if (is_array($cached) && (empty($cached['id']) ? !$id : (int)$cached['id'] === $
 if ($id) {
     $draft['id'] = $id;
 }
+$draft = tool_murules_normalize_draft_conditions($draft);
+
+// Working condition being edited in the form (defaults to a new empty slot after saved ones).
+$editing = $draft['editing'] ?? ['conditiontype' => '', 'conditionconfig' => []];
+if (is_object($editing)) {
+    $editing = (array)$editing;
+}
+if (empty($editing['conditiontype']) && empty($draft['conditions'])) {
+    // First condition: seed from legacy keys if present.
+    $editing = [
+        'conditiontype' => (string)($draft['conditiontype'] ?? ''),
+        'conditionconfig' => $draft['conditionconfig'] ?? [],
+    ];
+}
+
+// Remove a saved AND condition.
+if ($step === 'event' && $removecond >= 0) {
+    require_sesskey();
+    if (isset($draft['conditions'][$removecond])) {
+        array_splice($draft['conditions'], $removecond, 1);
+        $draft = tool_murules_normalize_draft_conditions($draft);
+        $SESSION->$sesskeyname = $draft;
+    }
+    redirect(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => 'event']));
+}
 
 // Type picker reload (single-panel Event/Actions forms).
 if ($step === 'event' && $pick !== '') {
     $picked = \tool_murules\local\registry::get_condition($pick);
     if ($picked && $picked->is_available()) {
-        if (($draft['conditiontype'] ?? '') !== $pick) {
-            $draft['conditiontype'] = $pick;
-            $draft['conditionconfig'] = [];
+        if (($editing['conditiontype'] ?? '') !== $pick) {
+            $editing = [
+                'conditiontype' => $pick,
+                'conditionconfig' => [],
+            ];
+            $draft['editing'] = $editing;
             $SESSION->$sesskeyname = $draft;
         }
     }
@@ -89,13 +174,15 @@ $PAGE->set_heading($PAGE->title);
 $renderer = $PAGE->get_renderer('tool_murules');
 
 if ($step === 'event') {
+    $hasconditions = !empty($draft['conditions']);
     $form = new \tool_murules\form\rule_event(null, [
-        'conditiontype' => $draft['conditiontype'] ?? '',
-        'conditionconfig' => $draft['conditionconfig'] ?? [],
+        'conditiontype' => $editing['conditiontype'] ?? '',
+        'conditionconfig' => $editing['conditionconfig'] ?? [],
+        'hasconditions' => $hasconditions,
     ]);
     $form->set_data([
         'id' => $id,
-        'conditiontype' => $draft['conditiontype'] ?? '',
+        'conditiontype' => $editing['conditiontype'] ?? '',
     ]);
     if ($form->is_cancelled()) {
         unset($SESSION->$sesskeyname);
@@ -103,10 +190,23 @@ if ($step === 'event') {
     }
     if ($data = $form->get_data()) {
         $condition = \tool_murules\local\registry::get_condition($data->conditiontype);
-        $draft['conditiontype'] = $data->conditiontype;
-        $draft['conditionconfig'] = $condition->extract_config((array)$data);
+        $newcond = [
+            'conditiontype' => $data->conditiontype,
+            'conditionconfig' => $condition->extract_config((array)$data),
+        ];
+        $draft['conditions'][] = $newcond;
+        $draft['editing'] = ['conditiontype' => '', 'conditionconfig' => []];
         $draft['id'] = (int)($data->id ?? 0);
+        $draft = tool_murules_normalize_draft_conditions($draft);
         $SESSION->$sesskeyname = $draft;
+
+        // With existing conditions, submit only adds; otherwise continue unless addanother.
+        if ($hasconditions || !empty($data->addanother)) {
+            redirect(new moodle_url('/admin/tool/murules/edit.php', [
+                'id' => $draft['id'],
+                'step' => 'event',
+            ]));
+        }
         redirect(new moodle_url('/admin/tool/murules/edit.php', [
             'id' => $draft['id'],
             'step' => 'actions',
@@ -118,13 +218,62 @@ if ($step === 'event') {
     echo $renderer->wizard_steps('event');
     echo $OUTPUT->heading(get_string('wizard_event', 'tool_murules'), 3);
     echo html_writer::tag('p', get_string('wizard_event_help', 'tool_murules'), ['class' => 'text-muted']);
+
+    echo html_writer::tag('h4', get_string('conditions_and_heading', 'tool_murules'), ['class' => 'h5']);
+    echo html_writer::tag('p', get_string('conditions_and_help', 'tool_murules'), ['class' => 'text-muted small']);
+    if (!$hasconditions) {
+        echo html_writer::div(get_string('noconditionsyet', 'tool_murules'), 'alert alert-secondary');
+    } else {
+        echo html_writer::start_tag('ul', ['class' => 'list-group mb-3']);
+        foreach ($draft['conditions'] as $idx => $cond) {
+            $c = \tool_murules\local\registry::get_condition($cond['conditiontype']);
+            $label = $c
+                ? $c->get_description($cond['conditionconfig'])
+                : (string)$cond['conditiontype'];
+            $removeurl = new moodle_url('/admin/tool/murules/edit.php', [
+                'id' => $id,
+                'step' => 'event',
+                'removecond' => $idx,
+                'sesskey' => sesskey(),
+            ]);
+            echo html_writer::tag(
+                'li',
+                html_writer::div(
+                    html_writer::span(get_string('condition_n', 'tool_murules', $idx + 1), 'badge text-bg-secondary me-2') .
+                    s($label),
+                    'me-auto'
+                ) .
+                html_writer::link($removeurl, get_string('removecondition', 'tool_murules'), [
+                    'class' => 'btn btn-outline-danger btn-sm',
+                ]),
+                ['class' => 'list-group-item d-flex align-items-center justify-content-between gap-2']
+            );
+        }
+        echo html_writer::end_tag('ul');
+        echo html_writer::div(
+            html_writer::link(
+                new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => 'actions']),
+                get_string('continueactions', 'tool_murules'),
+                ['class' => 'btn btn-primary']
+            ),
+            'mb-3'
+        );
+    }
+
+    echo $OUTPUT->heading(
+        $hasconditions
+            ? get_string('configure_next_condition', 'tool_murules')
+            : get_string('wizard_event', 'tool_murules'),
+        4,
+        'h6 mt-3'
+    );
     $form->display();
     echo $OUTPUT->footer();
     exit;
 }
 
 if ($step === 'actions') {
-    if (empty($draft['conditiontype'])) {
+    if (empty($draft['conditions'])) {
         redirect(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => 'event']));
     }
     $form = new \tool_murules\form\rule_actions(null, [
@@ -155,16 +304,13 @@ if ($step === 'actions') {
     echo $renderer->wizard_steps('actions');
     echo $OUTPUT->heading(get_string('wizard_actions', 'tool_murules'), 3);
     echo html_writer::tag('p', get_string('wizard_actions_help', 'tool_murules'), ['class' => 'text-muted']);
-    if (!empty($draft['conditiontype'])) {
-        $cond = \tool_murules\local\registry::get_condition($draft['conditiontype']);
-        if ($cond) {
-            $whensummary = $cond->get_description($draft['conditionconfig'] ?? []);
-            echo html_writer::div(
-                html_writer::span(get_string('when', 'tool_murules'), 'tool_murules-label') .
-                html_writer::div(s($whensummary), 'tool_murules-recap tool_murules-recap-when'),
-                'tool_murules-wizard-context mb-3'
-            );
-        }
+    $whensummary = tool_murules_when_summary($draft['conditions']);
+    if ($whensummary !== '') {
+        echo html_writer::div(
+            html_writer::span(get_string('when', 'tool_murules'), 'small text-muted text-uppercase') .
+            html_writer::div(s($whensummary), 'tool_murules-recap'),
+            'mb-3'
+        );
     }
     $form->display();
     echo $OUTPUT->footer();
@@ -172,17 +318,12 @@ if ($step === 'actions') {
 }
 
 // Review.
-if (empty($draft['conditiontype']) || empty($draft['actiontype'])) {
+if (empty($draft['conditions']) || empty($draft['actiontype'])) {
     redirect(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => 'event']));
 }
 
-$condition = \tool_murules\local\registry::get_condition($draft['conditiontype']);
 $action = \tool_murules\local\registry::get_action($draft['actiontype']);
-$estimate = \tool_murules\local\engine::estimate_matching_users(
-    (string)$draft['conditiontype'],
-    $draft['conditionconfig'] ?? [],
-    500
-);
+$estimate = \tool_murules\local\engine::estimate_matching_users_and($draft['conditions'], 500);
 $estimatehtml = html_writer::div(
     html_writer::span(
         \tool_murules\local\engine::format_matching_estimate($estimate),
@@ -197,7 +338,7 @@ $form = new \tool_murules\form\rule_review(null, [
     'enabled' => $draft['enabled'] ?? 1,
     'actionlimit' => $draft['actionlimit'] ?? 'once',
     'includesuspended' => $draft['includesuspended'] ?? 0,
-    'when_summary' => $condition ? $condition->get_description($draft['conditionconfig'] ?? []) : '',
+    'when_summary' => tool_murules_when_summary($draft['conditions']),
     'then_summary' => $action ? $action->get_description($draft['actionconfig'] ?? []) : '',
     'match_estimate_html' => $estimatehtml,
 ]);
@@ -219,8 +360,7 @@ if ($data = $form->get_data()) {
         'enabled' => !empty($data->enabled),
         'actionlimit' => $data->actionlimit,
         'includesuspended' => !empty($data->includesuspended),
-        'conditiontype' => $draft['conditiontype'],
-        'conditionconfig' => $draft['conditionconfig'],
+        'conditions' => $draft['conditions'],
         'actiontype' => $draft['actiontype'],
         'actionconfig' => $draft['actionconfig'],
     ];

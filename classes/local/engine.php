@@ -149,20 +149,21 @@ final class engine {
             return [self::log_only_result('skipped', get_string('reason_outside_window', 'tool_murules'))];
         }
 
-        $condition = registry::get_condition($rulerec->conditiontype);
-        if (!$condition) {
+        $conditions = rule::get_conditions_decoded($rulerec);
+        if (!$conditions) {
             self::disable_broken_rule($rulerec);
             return [self::log_only_result('failed', get_string('reason_broken', 'tool_murules'))];
         }
-        $config = rule::condition_config($rulerec);
-        if ($condition->is_broken($config)) {
-            self::disable_broken_rule($rulerec);
-            return [self::log_only_result('failed', get_string('reason_broken', 'tool_murules'))];
-        }
-
-        if (!$condition->user_matches($userid, $config, $event)) {
-            // Not a match — no log row (avoid noise).
-            return [];
+        foreach ($conditions as $cond) {
+            $condition = registry::get_condition($cond['conditiontype']);
+            if (!$condition || $condition->is_broken($cond['conditionconfig'])) {
+                self::disable_broken_rule($rulerec);
+                return [self::log_only_result('failed', get_string('reason_broken', 'tool_murules'))];
+            }
+            if (!$condition->user_matches($userid, $cond['conditionconfig'], $event)) {
+                // AND: any miss means the rule does not match — no log row.
+                return [];
+            }
         }
 
         $actions = rule::get_actions((int)$rulerec->id);
@@ -188,17 +189,18 @@ final class engine {
         if (!(int)$rulerec->enabled) {
             return 0;
         }
-        $condition = registry::get_condition($rulerec->conditiontype);
-        if (!$condition) {
-            return 0;
-        }
-        $config = rule::condition_config($rulerec);
-        if ($condition->is_broken($config)) {
+        $conditions = rule::get_conditions_decoded($rulerec);
+        if (!$conditions || rule::is_broken($rulerec)) {
             return 0;
         }
 
+        // Candidate users from the first condition; AND-check the rest per user.
+        $primary = registry::get_condition($conditions[0]['conditiontype']);
+        if (!$primary) {
+            return 0;
+        }
         $limit = self::max_backfill_batch();
-        $userids = $condition->get_matching_user_ids($config, $limit, $fromuserid);
+        $userids = $primary->get_matching_user_ids($conditions[0]['conditionconfig'], $limit, $fromuserid);
         $last = $fromuserid;
         foreach ($userids as $userid) {
             $last = (int)$userid;
@@ -213,6 +215,66 @@ final class engine {
     }
 
     /**
+     * Estimate how many users currently match all AND conditions.
+     *
+     * Scans candidates from the first condition, then filters with user_matches
+     * on the remaining conditions. Caps the scan at $limit.
+     *
+     * @param array $conditions list of [conditiontype, conditionconfig]
+     * @param int $limit
+     * @return array{count:int, capped:bool, broken:bool, limit:int}
+     */
+    public static function estimate_matching_users_and(array $conditions, int $limit = 500): array {
+        $limit = max(1, $limit);
+        if (!$conditions) {
+            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
+        }
+        $instances = [];
+        foreach ($conditions as $cond) {
+            $type = (string)($cond['conditiontype'] ?? '');
+            $config = $cond['conditionconfig'] ?? [];
+            $condition = registry::get_condition($type);
+            if (!$condition || $condition->is_broken($config)) {
+                return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
+            }
+            $instances[] = ['instance' => $condition, 'config' => $config];
+        }
+        try {
+            $candidates = $instances[0]['instance']->get_matching_user_ids(
+                $instances[0]['config'],
+                $limit + 1,
+                0
+            );
+        } catch (\Throwable $e) {
+            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
+        }
+        $matched = 0;
+        $scanned = 0;
+        foreach ($candidates as $userid) {
+            $scanned++;
+            $ok = true;
+            for ($i = 1; $i < count($instances); $i++) {
+                if (!$instances[$i]['instance']->user_matches((int)$userid, $instances[$i]['config'], null)) {
+                    $ok = false;
+                    break;
+                }
+            }
+            if ($ok) {
+                $matched++;
+                if ($matched >= $limit) {
+                    return ['count' => $limit, 'capped' => true, 'broken' => false, 'limit' => $limit];
+                }
+            }
+        }
+        return [
+            'count' => $matched,
+            'capped' => $scanned > $limit,
+            'broken' => false,
+            'limit' => $limit,
+        ];
+    }
+
+    /**
      * Estimate how many users currently match a condition config.
      *
      * Caps the scan at $limit and reports whether the result was truncated.
@@ -223,26 +285,9 @@ final class engine {
      * @return array{count:int, capped:bool, broken:bool, limit:int}
      */
     public static function estimate_matching_users(string $conditiontype, array $config, int $limit = 500): array {
-        $limit = max(1, $limit);
-        $condition = registry::get_condition($conditiontype);
-        if (!$condition) {
-            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
-        }
-        if ($condition->is_broken($config)) {
-            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
-        }
-        try {
-            $ids = $condition->get_matching_user_ids($config, $limit + 1, 0);
-        } catch (\Throwable $e) {
-            return ['count' => 0, 'capped' => false, 'broken' => true, 'limit' => $limit];
-        }
-        $n = count($ids);
-        return [
-            'count' => min($n, $limit),
-            'capped' => $n > $limit,
-            'broken' => false,
-            'limit' => $limit,
-        ];
+        return self::estimate_matching_users_and([
+            ['conditiontype' => $conditiontype, 'conditionconfig' => $config],
+        ], $limit);
     }
 
     /**
@@ -274,11 +319,17 @@ final class engine {
             return;
         }
         foreach (rule::get_enabled(true) as $rulerec) {
-            $condition = registry::get_condition($rulerec->conditiontype);
-            if (!$condition || !$condition->is_scheduled()) {
-                continue;
+            $needs = false;
+            foreach (rule::get_conditions_decoded($rulerec) as $cond) {
+                $condition = registry::get_condition($cond['conditiontype']);
+                if ($condition && $condition->is_scheduled()) {
+                    $needs = true;
+                    break;
+                }
             }
-            self::queue_backfill((int)$rulerec->id, 0);
+            if ($needs) {
+                self::queue_backfill((int)$rulerec->id, 0);
+            }
         }
     }
 

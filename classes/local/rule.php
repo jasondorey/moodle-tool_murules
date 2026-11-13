@@ -57,6 +57,91 @@ final class rule {
     }
 
     /**
+     * Condition rows for a rule (AND), ordered.
+     *
+     * @param int $ruleid
+     * @return stdClass[]
+     */
+    public static function get_conditions(int $ruleid): array {
+        global $DB;
+        return array_values($DB->get_records(
+            'tool_murules_condition',
+            ['ruleid' => $ruleid],
+            'sortorder ASC, id ASC'
+        ));
+    }
+
+    /**
+     * Decoded condition list for a rule.
+     *
+     * Falls back to legacy rule.conditiontype/config when child rows are missing.
+     *
+     * @param stdClass $rulerec
+     * @return array<int,array{conditiontype:string,conditionconfig:array,id?:int}>
+     */
+    public static function get_conditions_decoded(stdClass $rulerec): array {
+        $rows = self::get_conditions((int)$rulerec->id);
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'id' => (int)$row->id,
+                'conditiontype' => (string)$row->conditiontype,
+                'conditionconfig' => condition\base::decode_config($row->conditionconfig ?? null),
+            ];
+        }
+        if ($out) {
+            return $out;
+        }
+        // Legacy single-column fallback.
+        if (!empty($rulerec->conditiontype)) {
+            return [[
+                'conditiontype' => (string)$rulerec->conditiontype,
+                'conditionconfig' => self::condition_config($rulerec),
+            ]];
+        }
+        return [];
+    }
+
+    /**
+     * Human WHEN summary (conditions joined with AND).
+     *
+     * @param stdClass $rulerec
+     * @return string
+     */
+    public static function format_when(stdClass $rulerec): string {
+        $parts = [];
+        foreach (self::get_conditions_decoded($rulerec) as $cond) {
+            $condition = registry::get_condition($cond['conditiontype']);
+            if ($condition) {
+                $parts[] = $condition->get_description($cond['conditionconfig']);
+            } else {
+                $parts[] = $cond['conditiontype'];
+            }
+        }
+        return $parts ? implode(' AND ', $parts) : '';
+    }
+
+    /**
+     * True if any condition is missing or broken.
+     *
+     * @param stdClass $rulerec
+     * @return bool
+     */
+    public static function is_broken(stdClass $rulerec): bool {
+        $conds = self::get_conditions_decoded($rulerec);
+        if (!$conds) {
+            return true;
+        }
+        foreach ($conds as $cond) {
+            $condition = registry::get_condition($cond['conditiontype']);
+            if (!$condition || $condition->is_broken($cond['conditionconfig'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param int $ruleid
      * @return stdClass[]
      */
@@ -66,19 +151,23 @@ final class rule {
     }
 
     /**
-     * Create or update a rule with a single action (Wave A).
+     * Create or update a rule with AND conditions + a single action (Wave A).
      *
-     * @param stdClass $data name, enabled, actionlimit, includesuspended, conditiontype, conditionconfig (array|string),
-     *                       actiontype, actionconfig (array|string), timestart?, timeend?, id?
+     * @param stdClass $data name, enabled, actionlimit, includesuspended,
+     *                       conditions[] (conditiontype + conditionconfig) OR legacy conditiontype/config,
+     *                       actiontype, actionconfig, timestart?, timeend?, id?
      * @return int rule id
      */
     public static function save(stdClass $data): int {
         global $DB, $USER;
 
         $now = time();
-        $conditionconfig = is_array($data->conditionconfig ?? null)
-            ? json_encode($data->conditionconfig)
-            : (string)($data->conditionconfig ?? '{}');
+        $conditions = self::normalize_conditions_input($data);
+        if (!$conditions) {
+            throw new \moodle_exception('error_condition', 'tool_murules');
+        }
+        $primary = $conditions[0];
+        $conditionconfig = json_encode($primary['conditionconfig']);
         $actionconfig = is_array($data->actionconfig ?? null)
             ? json_encode($data->actionconfig)
             : (string)($data->actionconfig ?? '{}');
@@ -97,7 +186,8 @@ final class rule {
             $record->actionlimitcount = $data->actionlimitcount ?? null;
             $record->actionperiod = $data->actionperiod ?? null;
             $record->includesuspended = !empty($data->includesuspended) ? 1 : 0;
-            $record->conditiontype = (string)$data->conditiontype;
+            // Keep primary columns in sync for indexes / legacy readers.
+            $record->conditiontype = (string)$primary['conditiontype'];
             $record->conditionconfig = $conditionconfig;
             $record->timemodified = $now;
             $record->usermodified = (int)$USER->id;
@@ -112,13 +202,12 @@ final class rule {
                 $action->sortorder = 0;
                 $DB->update_record('tool_murules_action', $action);
             } else {
-                $action = (object)[
+                $DB->insert_record('tool_murules_action', (object)[
                     'ruleid' => $ruleid,
                     'sortorder' => 0,
                     'actiontype' => (string)$data->actiontype,
                     'actionconfig' => $actionconfig,
-                ];
-                $DB->insert_record('tool_murules_action', $action);
+                ]);
             }
         } else {
             $record = (object)[
@@ -130,21 +219,22 @@ final class rule {
                 'actionlimitcount' => $data->actionlimitcount ?? null,
                 'actionperiod' => $data->actionperiod ?? null,
                 'includesuspended' => !empty($data->includesuspended) ? 1 : 0,
-                'conditiontype' => (string)$data->conditiontype,
+                'conditiontype' => (string)$primary['conditiontype'],
                 'conditionconfig' => $conditionconfig,
                 'timecreated' => $now,
                 'timemodified' => $now,
                 'usermodified' => (int)$USER->id,
             ];
             $ruleid = (int)$DB->insert_record('tool_murules_rule', $record);
-            $action = (object)[
+            $DB->insert_record('tool_murules_action', (object)[
                 'ruleid' => $ruleid,
                 'sortorder' => 0,
                 'actiontype' => (string)$data->actiontype,
                 'actionconfig' => $actionconfig,
-            ];
-            $DB->insert_record('tool_murules_action', $action);
+            ]);
         }
+
+        self::replace_conditions($ruleid, $conditions);
 
         $trans->allow_commit();
 
@@ -154,6 +244,67 @@ final class rule {
         }
 
         return $ruleid;
+    }
+
+    /**
+     * Replace all child condition rows for a rule.
+     *
+     * @param int $ruleid
+     * @param array $conditions
+     */
+    public static function replace_conditions(int $ruleid, array $conditions): void {
+        global $DB;
+        $DB->delete_records('tool_murules_condition', ['ruleid' => $ruleid]);
+        $sort = 0;
+        foreach ($conditions as $cond) {
+            $config = $cond['conditionconfig'] ?? [];
+            $DB->insert_record('tool_murules_condition', (object)[
+                'ruleid' => $ruleid,
+                'sortorder' => $sort++,
+                'conditiontype' => (string)$cond['conditiontype'],
+                'conditionconfig' => is_array($config) ? json_encode($config) : (string)$config,
+            ]);
+        }
+    }
+
+    /**
+     * @param stdClass $data
+     * @return array<int,array{conditiontype:string,conditionconfig:array}>
+     */
+    protected static function normalize_conditions_input(stdClass $data): array {
+        $out = [];
+        if (!empty($data->conditions) && is_array($data->conditions)) {
+            foreach ($data->conditions as $cond) {
+                if (is_object($cond)) {
+                    $cond = (array)$cond;
+                }
+                if (empty($cond['conditiontype'])) {
+                    continue;
+                }
+                $config = $cond['conditionconfig'] ?? [];
+                if (is_string($config)) {
+                    $config = condition\base::decode_config($config);
+                }
+                $out[] = [
+                    'conditiontype' => (string)$cond['conditiontype'],
+                    'conditionconfig' => is_array($config) ? $config : [],
+                ];
+            }
+        }
+        if ($out) {
+            return $out;
+        }
+        if (!empty($data->conditiontype)) {
+            $config = $data->conditionconfig ?? [];
+            if (is_string($config)) {
+                $config = condition\base::decode_config($config);
+            }
+            return [[
+                'conditiontype' => (string)$data->conditiontype,
+                'conditionconfig' => is_array($config) ? $config : [],
+            ]];
+        }
+        return [];
     }
 
     /**
@@ -180,6 +331,7 @@ final class rule {
         global $DB;
         $DB->delete_records('tool_murules_match', ['ruleid' => $ruleid]);
         $DB->delete_records('tool_murules_action', ['ruleid' => $ruleid]);
+        $DB->delete_records('tool_murules_condition', ['ruleid' => $ruleid]);
         $DB->delete_records('tool_murules_rule', ['id' => $ruleid]);
     }
 
@@ -206,12 +358,16 @@ final class rule {
     }
 
     /**
-     * Decoded condition config.
+     * Decoded primary (first) condition config — legacy helper.
      *
      * @param stdClass $rulerec
      * @return array
      */
     public static function condition_config(stdClass $rulerec): array {
+        $conds = self::get_conditions_decoded($rulerec);
+        if ($conds) {
+            return $conds[0]['conditionconfig'];
+        }
         return condition\base::decode_config($rulerec->conditionconfig ?? null);
     }
 }

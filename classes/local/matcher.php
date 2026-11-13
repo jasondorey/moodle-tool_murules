@@ -26,7 +26,7 @@ namespace tool_murules\local;
 final class matcher {
 
     /**
-     * Enabled rule ids whose condition listens for this event class.
+     * Enabled rule ids that have at least one condition listening for this event.
      *
      * @param string $eventclass
      * @return int[]
@@ -34,12 +34,15 @@ final class matcher {
     public static function ruleids_for_event(string $eventclass): array {
         $ids = [];
         foreach (rule::get_enabled(true) as $rulerec) {
-            $condition = registry::get_condition($rulerec->conditiontype);
-            if (!$condition) {
-                continue;
-            }
-            if (in_array($eventclass, $condition->get_events(), true)) {
-                $ids[] = (int)$rulerec->id;
+            foreach (rule::get_conditions_decoded($rulerec) as $cond) {
+                $condition = registry::get_condition($cond['conditiontype']);
+                if (!$condition) {
+                    continue;
+                }
+                if (in_array($eventclass, $condition->get_events(), true)) {
+                    $ids[] = (int)$rulerec->id;
+                    break;
+                }
             }
         }
         return $ids;
@@ -59,6 +62,9 @@ final class matcher {
     /**
      * Narrow rule ids whose condition config key matches a value (when the key is set).
      *
+     * For AND multi-condition rules: drop the rule if any condition sets the key
+     * to a different value.
+     *
      * @param int[] $ruleids
      * @param string $key
      * @param int $value
@@ -75,8 +81,15 @@ final class matcher {
             } catch (\Throwable $e) {
                 continue;
             }
-            $config = rule::condition_config($rulerec);
-            if (!isset($config[$key]) || (int)$config[$key] === $value) {
+            $keep = true;
+            foreach (rule::get_conditions_decoded($rulerec) as $cond) {
+                $config = $cond['conditionconfig'];
+                if (isset($config[$key]) && (int)$config[$key] !== $value) {
+                    $keep = false;
+                    break;
+                }
+            }
+            if ($keep) {
                 $out[] = (int)$ruleid;
             }
         }

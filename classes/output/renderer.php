@@ -67,11 +67,9 @@ class renderer extends plugin_renderer_base {
         $all = [];
         $counts = ['all' => 0, 'enabled' => 0, 'disabled' => 0, 'broken' => 0];
         foreach (rule::get_all() as $rec) {
-            $condition = registry::get_condition($rec->conditiontype);
-            $config = rule::condition_config($rec);
-            $broken = $condition ? $condition->is_broken($config) : true;
+            $broken = rule::is_broken($rec);
             $enabled = (int)$rec->enabled === 1;
-            $when = $condition ? $condition->get_description($config) : $rec->conditiontype;
+            $when = rule::format_when($rec);
 
             $actions = rule::get_actions((int)$rec->id);
             $thenparts = [];

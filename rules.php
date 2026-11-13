@@ -70,9 +70,7 @@ if ($action && $id) {
                 \core\output\notification::NOTIFY_SUCCESS
             );
         }
-        $condition = \tool_murules\local\registry::get_condition($rulerec->conditiontype);
-        $config = \tool_murules\local\rule::condition_config($rulerec);
-        $when = $condition ? $condition->get_description($config) : $rulerec->conditiontype;
+        $when = \tool_murules\local\rule::format_when($rulerec);
         $thenparts = [];
         foreach (\tool_murules\local\rule::get_actions((int)$rulerec->id) as $actionrec) {
             $action = \tool_murules\local\registry::get_action($actionrec->actiontype);

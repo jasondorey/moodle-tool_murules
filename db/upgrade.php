@@ -29,6 +29,10 @@
  * @return bool
  */
 function xmldb_tool_murules_upgrade($oldversion) {
+    global $DB;
+
+    $dbman = $DB->get_manager();
+
     // Wave B adds condition classes + observers only (no schema change).
     // Bumping version refreshes classmap / event observers via Moodle upgrade.
     if ($oldversion < 2026111301) {
@@ -170,5 +174,41 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Local Overview dashboard + Rules/Logs tabs.
         upgrade_plugin_savepoint(true, 2026111335, 'tool', 'murules');
     }
+
+    if ($oldversion < 2026111336) {
+        // Multi-condition AND: child condition rows + migrate legacy single columns.
+        $table = new xmldb_table('tool_murules_condition');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('ruleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('conditiontype', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('conditionconfig', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('ruleid', XMLDB_KEY_FOREIGN, ['ruleid'], 'tool_murules_rule', ['id']);
+        $table->add_index('ruleid_sort', XMLDB_INDEX_NOTUNIQUE, ['ruleid', 'sortorder']);
+        $table->add_index('type_rule', XMLDB_INDEX_NOTUNIQUE, ['conditiontype', 'ruleid']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $rules = $DB->get_records('tool_murules_rule', null, 'id ASC', 'id, conditiontype, conditionconfig');
+        foreach ($rules as $rulerec) {
+            if ($DB->record_exists('tool_murules_condition', ['ruleid' => $rulerec->id])) {
+                continue;
+            }
+            if ($rulerec->conditiontype === '' || $rulerec->conditiontype === null) {
+                continue;
+            }
+            $DB->insert_record('tool_murules_condition', (object)[
+                'ruleid' => (int)$rulerec->id,
+                'sortorder' => 0,
+                'conditiontype' => (string)$rulerec->conditiontype,
+                'conditionconfig' => (string)($rulerec->conditionconfig ?? '{}'),
+            ]);
+        }
+
+        upgrade_plugin_savepoint(true, 2026111336, 'tool', 'murules');
+    }
+
     return true;
 }
