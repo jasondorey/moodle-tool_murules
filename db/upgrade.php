@@ -162,5 +162,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Log status tabs no longer overwrite SQL :ruleid params.
         upgrade_plugin_savepoint(true, 2026111333, 'tool', 'murules');
     }
+    if ($oldversion < 2026111334) {
+        // Prefer Bootstrap / Moodle Design System components over custom chrome.
+        upgrade_plugin_savepoint(true, 2026111334, 'tool', 'murules');
+    }
     return true;
 }

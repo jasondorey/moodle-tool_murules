@@ -130,7 +130,7 @@ if ($contextbits) {
     echo html_writer::tag(
         'p',
         get_string('overview_showing', 'tool_murules', implode(' · ', $contextbits)),
-        ['class' => 'tool_murules-showing', 'aria-live' => 'polite']
+        ['class' => 'text-muted fw-semibold', 'aria-live' => 'polite']
     );
 }
 echo $renderer->rule_cards($filter, $query);

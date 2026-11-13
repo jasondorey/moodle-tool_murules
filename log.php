@@ -123,25 +123,31 @@ if (!$counts['all']) {
 }
 
 $filterhtml = html_writer::start_tag('nav', [
-    'class' => 'tool_murules-filters tool_murules-log-filters mb-3',
+    'class' => 'mb-3',
     'aria-label' => get_string('log_filter_label', 'tool_murules'),
 ]);
+$filterhtml .= html_writer::start_tag('ul', ['class' => 'nav nav-pills flex-wrap gap-1']);
 foreach ($allowedstatus as $key) {
     $linkparams = ['id' => $id];
     if ($key !== 'all') {
         $linkparams['status'] = $key;
     }
-    $classes = 'tool_murules-filter';
+    $classes = 'nav-link';
     if ($key === $statusfilter) {
-        $classes .= ' is-selected';
+        $classes .= ' active';
     }
     $label = get_string('log_filter_' . $key, 'tool_murules');
-    $filterhtml .= html_writer::link(
-        new moodle_url('/admin/tool/murules/log.php', $linkparams),
-        $label . ' ' . html_writer::span((string)$counts[$key], 'tool_murules-filter-count'),
-        ['class' => $classes] + ($key === $statusfilter ? ['aria-current' => 'page'] : [])
+    $filterhtml .= html_writer::tag(
+        'li',
+        html_writer::link(
+            new moodle_url('/admin/tool/murules/log.php', $linkparams),
+            $label . ' ' . html_writer::span((string)$counts[$key], 'badge text-bg-light text-dark'),
+            ['class' => $classes] + ($key === $statusfilter ? ['aria-current' => 'page'] : [])
+        ),
+        ['class' => 'nav-item']
     );
 }
+$filterhtml .= html_writer::end_tag('ul');
 $filterhtml .= html_writer::end_tag('nav');
 echo $filterhtml;
 
@@ -149,7 +155,7 @@ if ($statusfilter !== 'all') {
     echo html_writer::tag(
         'p',
         get_string('overview_showing', 'tool_murules', get_string('log_filter_' . $statusfilter, 'tool_murules')),
-        ['class' => 'tool_murules-showing', 'aria-live' => 'polite']
+        ['class' => 'text-muted fw-semibold', 'aria-live' => 'polite']
     );
 }
 
@@ -201,8 +207,13 @@ foreach ($records as $rec) {
     $statuslabel = get_string_manager()->string_exists($statuskey, 'tool_murules')
         ? get_string($statuskey, 'tool_murules')
         : $rec->status;
-    $statusclass = 'tool_murules-status tool_murules-status-' . preg_replace('/[^a-z]/', '', strtolower((string)$rec->status));
-    $statushtml = html_writer::span(s($statuslabel), $statusclass);
+    $statusboot = match ((string)$rec->status) {
+        'applied' => 'text-bg-success',
+        'skipped' => 'text-bg-warning',
+        'failed' => 'text-bg-danger',
+        default => 'text-bg-secondary',
+    };
+    $statushtml = html_writer::span(s($statuslabel), 'badge ' . $statusboot);
     $table->data[] = [
         userdate($rec->timecreated),
         $userlink,

@@ -205,26 +205,34 @@ class renderer extends plugin_renderer_base {
         $steps = ['event', 'actions', 'review'];
         $currentidx = array_search($current, $steps, true);
         $html = html_writer::start_tag('nav', [
-            'class' => 'tool_murules-wizard-steps',
+            'class' => 'tool_murules-wizard-steps mb-3',
             'aria-label' => get_string('wizard_steps_label', 'tool_murules'),
         ]);
-        $html .= html_writer::start_tag('ol', ['class' => 'tool_murules-wizard-steps-list']);
+        $html .= html_writer::start_tag('ul', ['class' => 'nav nav-pills flex-wrap gap-1']);
         foreach ($steps as $idx => $step) {
-            $classes = ['tool_murules-wizard-step'];
+            $classes = 'nav-link';
             if ($step === $current) {
-                $classes[] = 'is-current';
+                $classes .= ' active';
             } else if ($currentidx !== false && $idx < $currentidx) {
-                $classes[] = 'is-done';
+                $classes .= ' text-success';
             }
-            $label = html_writer::tag('span', (string)($idx + 1), ['class' => 'tool_murules-wizard-num', 'aria-hidden' => 'true']);
-            $label .= ' ' . get_string('wizard_' . $step, 'tool_murules');
-            $attrs = ['class' => implode(' ', $classes)];
+            $label = html_writer::tag('span', (string)($idx + 1), [
+                'class' => 'badge text-bg-light text-dark me-1',
+                'aria-hidden' => 'true',
+            ]);
+            $label .= get_string('wizard_' . $step, 'tool_murules');
+            $linkattrs = ['class' => $classes];
             if ($step === $current) {
-                $attrs['aria-current'] = 'step';
+                $linkattrs['aria-current'] = 'step';
             }
-            $html .= html_writer::tag('li', $label, $attrs);
+            // Non-navigable indicator steps (wizard state is server-side).
+            $html .= html_writer::tag(
+                'li',
+                html_writer::tag('span', $label, $linkattrs),
+                ['class' => 'nav-item']
+            );
         }
-        $html .= html_writer::end_tag('ol');
+        $html .= html_writer::end_tag('ul');
         $stepnum = ($currentidx === false) ? 1 : ($currentidx + 1);
         $steplabel = get_string('wizard_' . $current, 'tool_murules');
         if ($stepnum >= count($steps)) {
@@ -237,7 +245,7 @@ class renderer extends plugin_renderer_base {
             ]);
         }
         $html .= html_writer::tag('p', $progress, [
-            'class' => 'tool_murules-wizard-progress text-muted',
+            'class' => 'tool_murules-wizard-progress text-muted small mb-0',
             'aria-live' => 'polite',
         ]);
         $html .= html_writer::end_tag('nav');
