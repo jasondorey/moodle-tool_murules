@@ -220,5 +220,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111338, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111339) {
+        // Fix blank Rules page: missing brace in rules.php delete confirm.
+        upgrade_plugin_savepoint(true, 2026111339, 'tool', 'murules');
+    }
+
     return true;
 }

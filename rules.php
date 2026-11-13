@@ -74,6 +74,7 @@ if ($action && $id) {
         $then = \tool_murules\local\rule::format_then($rulerec);
         if ($then === '') {
             $then = '—';
+        }
         $confirmmsg = get_string('deleteruleconfirm', 'tool_murules', (object)[
             'name' => format_string($rulerec->name),
         ]);
