@@ -225,5 +225,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111339, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111340) {
+        // React create/edit wizard + AJAX editor web services (Formslib path replaced).
+        upgrade_plugin_savepoint(true, 2026111340, 'tool', 'murules');
+    }
+
     return true;
 }

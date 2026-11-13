@@ -78,3 +78,15 @@
 .tool_murules-wizard-next {
     margin-top: 0.15rem;
 }
+
+.tool_murules-react-wizard {
+    max-width: 46rem;
+}
+
+.tool_murules-react-mount {
+    min-height: 12rem;
+}
+
+.tool_murules-action-picker {
+    max-width: 42rem;
+}

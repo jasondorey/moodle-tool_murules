@@ -1,0 +1,30 @@
+{
+  "Wizard": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "components/ActionsStep": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "components/EventStep": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "components/ReviewStep": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "components/SchemaForm": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "services/api": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "types": {
+    "eject": "safe",
+    "wrap": "safe"
+  }
+}

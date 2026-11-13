@@ -330,6 +330,9 @@ $string['error_noprogram'] = 'Select a program with a manual allocation source.'
 $string['error_nosource'] = 'Selected program has no manual allocation source.';
 $string['error_condition'] = 'Select a condition type.';
 $string['error_action'] = 'Select an action type.';
+$string['error_rulename'] = 'Enter a rule name.';
+$string['react_wizard_loading'] = 'Loading rule wizard…';
+$string['react_wizard_error'] = 'The rule wizard could not load. Refresh the page or contact an administrator.';
 $string['error_name'] = 'Enter a rule name.';
 
 $string['condition:program_allocated'] = 'User allocated to program';

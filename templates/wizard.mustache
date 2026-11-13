@@ -1,0 +1,16 @@
+{{!
+    @template tool_murules/wizard
+
+    React create/edit rule wizard mount point.
+}}
+{{#react}}
+{
+    "component": "@moodle/lms/tool_murules/Wizard",
+    "props": {
+        "ruleid": {{ruleid}},
+        "returnurl": {{{returnurl}}}
+    },
+    "class": "tool_murules-react-mount"
+}
+<p class="text-muted">{{#str}} react_wizard_loading, tool_murules {{/str}}</p>
+{{/react}}
