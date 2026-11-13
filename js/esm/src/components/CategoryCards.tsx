@@ -1,11 +1,11 @@
 /**
- * Category cards for the Event picker (Connect-like, Bootstrap cards).
+ * Event category dropdown + single category card (events list).
  *
  * @module tool_murules/components/CategoryCards
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {useState} from 'react';
+import {useMemo, useState} from 'react';
 import type {CatalogCategory} from '../types';
 
 type Props = {
@@ -15,57 +15,66 @@ type Props = {
 };
 
 export default function CategoryCards({catalog, strings, onPick}: Props) {
-    const [openKey, setOpenKey] = useState(catalog[0]?.key || '');
+    const [selectedKey, setSelectedKey] = useState('');
+    const selected = useMemo(
+        () => catalog.find((c) => c.key === selectedKey) || null,
+        [catalog, selectedKey],
+    );
 
     return (
-        <div className="tool_murules-category-cards row g-3">
-            {catalog.map((cat) => {
-                const open = openKey === cat.key;
-                return (
-                    <div className="col-12 col-md-6" key={cat.key}>
-                        <div className={`card h-100 tool_murules-category-card${open ? ' is-open border-primary' : ''}`}>
-                            <button
-                                type="button"
-                                className="card-header tool_murules-category-card-header btn text-start w-100 d-flex align-items-center justify-content-between gap-2"
-                                aria-expanded={open}
-                                onClick={() => setOpenKey(open ? '' : cat.key)}
-                            >
-                                <span className="fw-semibold">{cat.label}</span>
-                                <span className="badge text-bg-secondary">{cat.count}</span>
-                            </button>
-                            {open ? (
-                                <ul className="list-group list-group-flush">
-                                    {cat.items.map((item) => (
-                                        <li className="list-group-item p-0" key={item.type}>
-                                            <button
-                                                type="button"
-                                                className="list-group-item list-group-item-action border-0 d-flex align-items-center justify-content-between gap-2 tool_murules-picker-item w-100 text-start"
-                                                onClick={() => onPick(item.type)}
-                                            >
-                                                <span>
-                                                    <span className="d-block fw-semibold">{item.name}</span>
-                                                    <span className="small text-muted">
-                                                        {strings.pickcondition_hint || ''}
-                                                    </span>
-                                                </span>
-                                                <span className="btn btn-sm btn-primary">
-                                                    {strings.pickcondition}
-                                                </span>
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="card-body py-2">
-                                    <p className="card-text small text-muted mb-0">
-                                        {strings.category_card_hint || 'Expand to choose an event'}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+        <div className="tool_murules-category-picker">
+            <div className="mb-3">
+                <label className="form-label" htmlFor="murules_event_category">
+                    {strings.choose_category || 'Category'}
+                </label>
+                <select
+                    id="murules_event_category"
+                    className="form-select"
+                    value={selectedKey}
+                    onChange={(e) => setSelectedKey(e.target.value)}
+                >
+                    <option value="">{strings.choose_category_placeholder || strings.choosedots || '…'}</option>
+                    {catalog.map((cat) => (
+                        <option key={cat.key} value={cat.key}>
+                            {cat.label} ({cat.count})
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {!selected ? (
+                <div className="alert alert-secondary mb-0">
+                    {strings.choose_category_help || 'Select a category to see available events.'}
+                </div>
+            ) : (
+                <div className="card tool_murules-category-card is-open border-primary">
+                    <div className="card-header d-flex align-items-center justify-content-between gap-2">
+                        <span className="fw-semibold">{selected.label}</span>
+                        <span className="badge text-bg-secondary">{selected.count}</span>
                     </div>
-                );
-            })}
+                    <ul className="list-group list-group-flush">
+                        {selected.items.map((item) => (
+                            <li className="list-group-item p-0" key={item.type}>
+                                <button
+                                    type="button"
+                                    className="list-group-item list-group-item-action border-0 d-flex align-items-center justify-content-between gap-2 tool_murules-picker-item w-100 text-start"
+                                    onClick={() => onPick(item.type)}
+                                >
+                                    <span>
+                                        <span className="d-block fw-semibold">{item.name}</span>
+                                        <span className="small text-muted">
+                                            {strings.pickcondition_hint || ''}
+                                        </span>
+                                    </span>
+                                    <span className="btn btn-sm btn-primary">
+                                        {strings.pickcondition}
+                                    </span>
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
         </div>
     );
 }

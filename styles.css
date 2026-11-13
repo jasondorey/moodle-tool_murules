@@ -156,12 +156,9 @@
     }
 }
 
-/* Category / action cards */
-.tool_murules-category-card-header {
-    background: var(--bs-body-bg, #fff);
-    border: 0;
-    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-    border-radius: var(--bs-border-radius, 0.375rem) var(--bs-border-radius, 0.375rem) 0 0;
+/* Category dropdown + single card / action cards */
+.tool_murules-category-picker {
+    max-width: 42rem;
 }
 
 .tool_murules-category-card.is-open {

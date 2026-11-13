@@ -235,5 +235,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111341, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111342) {
+        // Event step: category dropdown + single category card.
+        upgrade_plugin_savepoint(true, 2026111342, 'tool', 'murules');
+    }
+
     return true;
 }

@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111341;
+$plugin->version   = 2026111342;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.6.1-wizardPolish';
+$plugin->release   = '0.6.2-categorySelect';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,
