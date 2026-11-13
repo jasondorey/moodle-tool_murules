@@ -48,7 +48,12 @@ __name(fromDatetimeLocal, "fromDatetimeLocal");
 function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
   const [courseOptions, setCourseOptions] = useState([]);
   const [courseQuery, setCourseQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [courseError, setCourseError] = useState("");
   const [cmsByField, setCmsByField] = useState({});
+  const [cmsLoading, setCmsLoading] = useState(false);
+  const [cmsError, setCmsError] = useState("");
   const courseFields = useMemo(
     () => schema.fields.filter((f) => f.type === "course"),
     [schema.fields]
@@ -58,23 +63,42 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
     [schema.fields]
   );
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(courseQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [courseQuery]);
+  useEffect(() => {
+    if (!courseFields.length) {
+      return;
+    }
     let cancelled = false;
-    const preferred = courseFields.length ? Number(values[courseFields[0].name] || 0) : 0;
-    searchCourses(courseQuery, preferred).then((courses) => {
+    const preferred = Number(values[courseFields[0].name] || 0);
+    setCourseLoading(true);
+    setCourseError("");
+    searchCourses(debouncedQuery, preferred).then((courses) => {
       if (!cancelled) {
         setCourseOptions(courses);
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (!cancelled) {
         setCourseOptions([]);
+        setCourseError(err.message || strings.course_search_error || "Course search failed");
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setCourseLoading(false);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [courseQuery, courseFields, values]);
+  }, [debouncedQuery, courseFields, values, strings.course_search_error]);
   useEffect(() => {
+    if (!cmFields.length) {
+      return;
+    }
     let cancelled = false;
+    setCmsLoading(true);
+    setCmsError("");
     Promise.all(
       cmFields.map(async (field) => {
         const courseid = Number(values[field.dependsOn || "courseid"] || 0);
@@ -86,15 +110,20 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
       if (!cancelled) {
         setCmsByField(Object.fromEntries(entries));
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (!cancelled) {
         setCmsByField({});
+        setCmsError(err.message || strings.cms_load_error || "Could not load activities");
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setCmsLoading(false);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [cmFields, values]);
+  }, [cmFields, values, strings.cms_load_error]);
   const setValue = /* @__PURE__ */ __name((name, value) => {
     const next = { ...values, [name]: value };
     cmFields.forEach((field) => {
@@ -104,6 +133,13 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
     });
     onChange(next);
   }, "setValue");
+  const selectedCourseLabel = /* @__PURE__ */ __name((fieldName) => {
+    const id = Number(values[fieldName] || 0);
+    if (!id) {
+      return "";
+    }
+    return courseOptions.find((c) => c.id === id)?.name || `#${id}`;
+  }, "selectedCourseLabel");
   return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-schema-form", children: schema.fields.map((field) => {
     if (!visible(field, values)) {
       return null;
@@ -115,31 +151,87 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
       field.required ? " *" : ""
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-      lineNumber: 130,
+      lineNumber: 173,
       columnNumber: 21
     }, this);
     let control = null;
     if (field.type === "course") {
+      const selectedLabel = selectedCourseLabel(field.name);
       control = /* @__PURE__ */ jsxDEV("div", { className: "d-flex flex-column gap-2", children: [
+        selectedLabel ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-secondary py-2 px-3 mb-0 d-flex align-items-center justify-content-between gap-2", children: [
+          /* @__PURE__ */ jsxDEV("span", { children: [
+            /* @__PURE__ */ jsxDEV("span", { className: "small text-muted d-block", children: strings.selected_course || "Selected course" }, void 0, false, {
+              fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+              lineNumber: 187,
+              columnNumber: 41
+            }, this),
+            /* @__PURE__ */ jsxDEV("strong", { children: selectedLabel }, void 0, false, {
+              fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+              lineNumber: 190,
+              columnNumber: 41
+            }, this)
+          ] }, void 0, true, {
+            fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+            lineNumber: 186,
+            columnNumber: 37
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              className: "btn btn-sm btn-outline-secondary",
+              onClick: () => setValue(field.name, 0),
+              children: strings.clear_course || "Clear"
+            },
+            void 0,
+            false,
+            {
+              fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+              lineNumber: 192,
+              columnNumber: 37
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+          lineNumber: 185,
+          columnNumber: 33
+        }, this) : null,
         /* @__PURE__ */ jsxDEV(
           "input",
           {
             type: "search",
-            className: "form-control form-control-sm",
-            placeholder: strings.search_courses || "Course",
+            className: "form-control",
+            placeholder: strings.search_courses_placeholder || strings.search_courses || "Search courses",
             value: courseQuery,
             onChange: (e) => setCourseQuery(e.target.value),
-            "aria-label": strings.search_courses || "Course"
+            "aria-label": strings.search_courses || "Course",
+            autoComplete: "off"
           },
           void 0,
           false,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 140,
+            lineNumber: 201,
             columnNumber: 29
           },
           this
         ),
+        courseLoading ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted", children: strings.searching_courses || "Searching\u2026" }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+          lineNumber: 211,
+          columnNumber: 33
+        }, this) : null,
+        courseError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-warning py-2 mb-0", role: "alert", children: courseError }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+          lineNumber: 214,
+          columnNumber: 33
+        }, this) : null,
+        !courseLoading && !courseError && courseOptions.length === 0 ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted", children: strings.no_courses_found || "No courses match your search." }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+          lineNumber: 217,
+          columnNumber: 33
+        }, this) : null,
         /* @__PURE__ */ jsxDEV(
           "select",
           {
@@ -150,12 +242,12 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
             children: [
               /* @__PURE__ */ jsxDEV("option", { value: "0", children: strings.choosedots || "\u2026" }, void 0, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-                lineNumber: 154,
+                lineNumber: 227,
                 columnNumber: 33
               }, this),
               courseOptions.map((c) => /* @__PURE__ */ jsxDEV("option", { value: c.id, children: c.name }, c.id, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-                lineNumber: 156,
+                lineNumber: 229,
                 columnNumber: 37
               }, this))
             ]
@@ -164,48 +256,65 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           true,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 148,
+            lineNumber: 221,
             columnNumber: 29
           },
           this
         )
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-        lineNumber: 139,
+        lineNumber: 183,
         columnNumber: 25
       }, this);
     } else if (field.type === "coursemodule") {
       const cms = cmsByField[field.name] || [];
-      control = /* @__PURE__ */ jsxDEV(
-        "select",
-        {
-          id,
-          className: `form-select${err ? " is-invalid" : ""}`,
-          value: String(values[field.name] ?? 0),
-          onChange: (e) => setValue(field.name, Number(e.target.value) || 0),
-          disabled: !Number(values[field.dependsOn || "courseid"] || 0),
-          children: [
-            /* @__PURE__ */ jsxDEV("option", { value: "0", children: cms.length ? strings.choosedots || "\u2026" : strings.nocms || "No activities" }, void 0, false, {
-              fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-              lineNumber: 171,
-              columnNumber: 29
-            }, this),
-            cms.map((cm) => /* @__PURE__ */ jsxDEV("option", { value: cm.id, children: cm.name }, cm.id, false, {
-              fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-              lineNumber: 175,
-              columnNumber: 33
-            }, this))
-          ]
-        },
-        void 0,
-        true,
-        {
+      const hasCourse = !!Number(values[field.dependsOn || "courseid"] || 0);
+      control = /* @__PURE__ */ jsxDEV("div", { children: [
+        cmsLoading ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted mb-1", children: strings.loadingcms || "Loading\u2026" }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 164,
-          columnNumber: 25
-        },
-        this
-      );
+          lineNumber: 240,
+          columnNumber: 33
+        }, this) : null,
+        cmsError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-warning py-2 mb-2", role: "alert", children: cmsError }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+          lineNumber: 243,
+          columnNumber: 33
+        }, this) : null,
+        /* @__PURE__ */ jsxDEV(
+          "select",
+          {
+            id,
+            className: `form-select${err ? " is-invalid" : ""}`,
+            value: String(values[field.name] ?? 0),
+            onChange: (e) => setValue(field.name, Number(e.target.value) || 0),
+            disabled: !hasCourse || cmsLoading,
+            children: [
+              /* @__PURE__ */ jsxDEV("option", { value: "0", children: !hasCourse ? strings.choose_course_first || strings.choosedots || "\u2026" : cms.length ? strings.choosedots || "\u2026" : strings.nocms || "No activities" }, void 0, false, {
+                fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+                lineNumber: 252,
+                columnNumber: 33
+              }, this),
+              cms.map((cm) => /* @__PURE__ */ jsxDEV("option", { value: cm.id, children: cm.name }, cm.id, false, {
+                fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+                lineNumber: 260,
+                columnNumber: 37
+              }, this))
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+            lineNumber: 245,
+            columnNumber: 29
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+        lineNumber: 238,
+        columnNumber: 25
+      }, this);
     } else if (field.type === "select") {
       control = /* @__PURE__ */ jsxDEV(
         "select",
@@ -216,7 +325,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           onChange: (e) => setValue(field.name, e.target.value),
           children: (field.options || []).map((opt) => /* @__PURE__ */ jsxDEV("option", { value: opt.value, children: opt.label }, opt.value, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 188,
+            lineNumber: 274,
             columnNumber: 33
           }, this))
         },
@@ -224,7 +333,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 181,
+          lineNumber: 267,
           columnNumber: 25
         },
         this
@@ -243,7 +352,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 194,
+          lineNumber: 280,
           columnNumber: 25
         },
         this
@@ -262,7 +371,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 204,
+          lineNumber: 290,
           columnNumber: 25
         },
         this
@@ -284,7 +393,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 214,
+          lineNumber: 300,
           columnNumber: 25
         },
         this
@@ -303,7 +412,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 229,
+          lineNumber: 315,
           columnNumber: 25
         },
         this
@@ -314,17 +423,17 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
       control,
       err ? /* @__PURE__ */ jsxDEV("div", { className: "invalid-feedback d-block", children: err }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-        lineNumber: 243,
+        lineNumber: 329,
         columnNumber: 32
       }, this) : null
     ] }, field.name, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-      lineNumber: 240,
+      lineNumber: 326,
       columnNumber: 21
     }, this);
   }) }, void 0, false, {
     fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-    lineNumber: 122,
+    lineNumber: 165,
     columnNumber: 9
   }, this);
 }

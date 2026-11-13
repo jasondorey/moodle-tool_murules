@@ -13,15 +13,19 @@ import { useEffect, useMemo, useState } from "react";
 import ActionsStep from "./components/ActionsStep";
 import EventStep from "./components/EventStep";
 import ReviewStep from "./components/ReviewStep";
+import Stepper from "./components/Stepper";
 import { loadBootstrap } from "./services/api";
-const STEPS = ["event", "actions", "review"];
 function Wizard({ ruleid = 0, returnurl }) {
   const [boot, setBoot] = useState(null);
   const [draft, setDraft] = useState(null);
   const [step, setStep] = useState("event");
   const [error, setError] = useState("");
+  const [retryToken, setRetryToken] = useState(0);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError("");
     loadBootstrap(ruleid).then((payload) => {
       if (cancelled) {
         return;
@@ -31,82 +35,120 @@ function Wizard({ ruleid = 0, returnurl }) {
     }).catch((err) => {
       if (!cancelled) {
         setError(err.message || "Failed to load wizard");
+        setBoot(null);
+        setDraft(null);
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setLoading(false);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [ruleid]);
+  }, [ruleid, retryToken]);
   const strings = boot?.strings || {};
-  const stepIndex = STEPS.indexOf(step);
   const whenSummary = useMemo(() => {
     if (!draft) {
       return "";
     }
     return draft.conditions.map((c) => c.description || c.conditiontype).join(" AND ");
   }, [draft]);
-  if (error) {
-    return /* @__PURE__ */ jsxDEV("div", { className: "alert alert-danger", children: error }, void 0, false, {
+  if (loading) {
+    return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-react-wizard", "aria-busy": "true", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "placeholder-glow", children: [
+        /* @__PURE__ */ jsxDEV("span", { className: "placeholder col-7 mb-3" }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+          lineNumber: 68,
+          columnNumber: 21
+        }, this),
+        /* @__PURE__ */ jsxDEV("span", { className: "placeholder col-12 mb-2" }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+          lineNumber: 69,
+          columnNumber: 21
+        }, this),
+        /* @__PURE__ */ jsxDEV("span", { className: "placeholder col-10 mb-2" }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+          lineNumber: 70,
+          columnNumber: 21
+        }, this)
+      ] }, void 0, true, {
+        fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+        lineNumber: 67,
+        columnNumber: 17
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "text-muted", children: strings.react_wizard_loading || "Loading\u2026" }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+        lineNumber: 72,
+        columnNumber: 17
+      }, this)
+    ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 56,
-      columnNumber: 16
+      lineNumber: 66,
+      columnNumber: 13
     }, this);
   }
-  if (!boot || !draft) {
-    return /* @__PURE__ */ jsxDEV("p", { className: "text-muted", children: strings.react_wizard_loading || "Loading\u2026" }, void 0, false, {
+  if (error || !boot || !draft) {
+    return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-react-wizard", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "alert alert-danger", role: "alert", children: [
+        /* @__PURE__ */ jsxDEV("p", { className: "mb-2", children: error || strings.react_wizard_error || "Could not load wizard" }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+          lineNumber: 81,
+          columnNumber: 21
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            className: "btn btn-sm btn-outline-danger",
+            onClick: () => setRetryToken((n) => n + 1),
+            children: strings.retry || "Retry"
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+            lineNumber: 82,
+            columnNumber: 21
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+        lineNumber: 80,
+        columnNumber: 17
+      }, this),
+      /* @__PURE__ */ jsxDEV("a", { className: "btn btn-link px-0", href: returnurl, children: strings.cancelwizard || "Cancel" }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+        lineNumber: 90,
+        columnNumber: 17
+      }, this)
+    ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 59,
-      columnNumber: 16
+      lineNumber: 79,
+      columnNumber: 13
     }, this);
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-react-wizard", children: [
-    /* @__PURE__ */ jsxDEV("nav", { className: "tool_murules-wizard-steps mb-3", "aria-label": strings.wizard_steps_label || "Wizard", children: [
-      /* @__PURE__ */ jsxDEV("ul", { className: "nav nav-pills flex-wrap gap-1", children: STEPS.map((key, idx) => {
-        let cls = "nav-link";
-        if (key === step) {
-          cls += " active";
-        } else if (idx < stepIndex) {
-          cls += " text-success";
-        }
-        return /* @__PURE__ */ jsxDEV("li", { className: "nav-item", children: /* @__PURE__ */ jsxDEV("span", { className: cls, "aria-current": key === step ? "step" : void 0, children: [
-          /* @__PURE__ */ jsxDEV("span", { className: "badge text-bg-light text-dark me-1", "aria-hidden": "true", children: idx + 1 }, void 0, false, {
-            fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-            lineNumber: 76,
-            columnNumber: 37
-          }, this),
-          strings[`wizard_${key}`] || key
-        ] }, void 0, true, {
-          fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-          lineNumber: 75,
-          columnNumber: 33
-        }, this) }, key, false, {
-          fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-          lineNumber: 74,
-          columnNumber: 29
-        }, this);
-      }) }, void 0, false, {
+    /* @__PURE__ */ jsxDEV("header", { className: "tool_murules-wizard-header mb-3", children: [
+      /* @__PURE__ */ jsxDEV("h2", { className: "h3 mb-1", children: draft.id ? strings.editrule : strings.createrule }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 65,
+        lineNumber: 98,
         columnNumber: 17
       }, this),
-      /* @__PURE__ */ jsxDEV("p", { className: "tool_murules-wizard-progress text-muted small mb-0", children: strings.wizard_progress ? strings.wizard_progress.replace("{$a->current}", String(stepIndex + 1)).replace("{$a->total}", String(STEPS.length)).replace("{$a->label}", strings[`wizard_${step}`] || step) : `Step ${stepIndex + 1} of ${STEPS.length}` }, void 0, false, {
+      /* @__PURE__ */ jsxDEV("p", { className: "text-muted mb-0", children: strings.wizard_intro || strings.wizard_event_help }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 85,
+        lineNumber: 101,
         columnNumber: 17
-      }, this),
-      step === "event" ? /* @__PURE__ */ jsxDEV("p", { className: "tool_murules-wizard-next text-muted small mb-0", children: strings.wizard_next_actions }, void 0, false, {
-        fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 94,
-        columnNumber: 21
-      }, this) : null,
-      step === "actions" ? /* @__PURE__ */ jsxDEV("p", { className: "tool_murules-wizard-next text-muted small mb-0", children: strings.wizard_next_review }, void 0, false, {
-        fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 97,
-        columnNumber: 21
-      }, this) : null
+      }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 64,
+      lineNumber: 97,
+      columnNumber: 13
+    }, this),
+    /* @__PURE__ */ jsxDEV(Stepper, { current: step, strings }, void 0, false, {
+      fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
+      lineNumber: 106,
       columnNumber: 13
     }, this),
     step === "event" ? /* @__PURE__ */ jsxDEV(
@@ -122,7 +164,7 @@ function Wizard({ ruleid = 0, returnurl }) {
       false,
       {
         fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 102,
+        lineNumber: 109,
         columnNumber: 17
       },
       this
@@ -142,7 +184,7 @@ function Wizard({ ruleid = 0, returnurl }) {
       false,
       {
         fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 112,
+        lineNumber: 119,
         columnNumber: 17
       },
       this
@@ -161,23 +203,23 @@ function Wizard({ ruleid = 0, returnurl }) {
       false,
       {
         fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 124,
+        lineNumber: 131,
         columnNumber: 17
       },
       this
     ) : null,
     /* @__PURE__ */ jsxDEV("div", { className: "mt-4", children: /* @__PURE__ */ jsxDEV("a", { className: "btn btn-link px-0", href: returnurl, children: strings.cancelwizard }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 135,
+      lineNumber: 142,
       columnNumber: 17
     }, this) }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 134,
+      lineNumber: 141,
       columnNumber: 13
     }, this)
   ] }, void 0, true, {
     fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-    lineNumber: 63,
+    lineNumber: 96,
     columnNumber: 9
   }, this);
 }

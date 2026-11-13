@@ -11,19 +11,22 @@ import {useEffect, useMemo, useState} from 'react';
 import ActionsStep from './components/ActionsStep';
 import EventStep from './components/EventStep';
 import ReviewStep from './components/ReviewStep';
+import Stepper from './components/Stepper';
 import {loadBootstrap} from './services/api';
 import type {BootstrapPayload, Draft, WizardProps, WizardStep} from './types';
-
-const STEPS: WizardStep[] = ['event', 'actions', 'review'];
 
 export default function Wizard({ruleid = 0, returnurl}: WizardProps) {
     const [boot, setBoot] = useState<BootstrapPayload | null>(null);
     const [draft, setDraft] = useState<Draft | null>(null);
     const [step, setStep] = useState<WizardStep>('event');
     const [error, setError] = useState('');
+    const [retryToken, setRetryToken] = useState(0);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let cancelled = false;
+        setLoading(true);
+        setError('');
         loadBootstrap(ruleid)
             .then((payload) => {
                 if (cancelled) {
@@ -35,15 +38,21 @@ export default function Wizard({ruleid = 0, returnurl}: WizardProps) {
             .catch((err: Error) => {
                 if (!cancelled) {
                     setError(err.message || 'Failed to load wizard');
+                    setBoot(null);
+                    setDraft(null);
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
                 }
             });
         return () => {
             cancelled = true;
         };
-    }, [ruleid]);
+    }, [ruleid, retryToken]);
 
     const strings = boot?.strings || {};
-    const stepIndex = STEPS.indexOf(step);
 
     const whenSummary = useMemo(() => {
         if (!draft) {
@@ -52,51 +61,49 @@ export default function Wizard({ruleid = 0, returnurl}: WizardProps) {
         return draft.conditions.map((c) => c.description || c.conditiontype).join(' AND ');
     }, [draft]);
 
-    if (error) {
-        return <div className="alert alert-danger">{error}</div>;
+    if (loading) {
+        return (
+            <div className="tool_murules-react-wizard" aria-busy="true">
+                <div className="placeholder-glow">
+                    <span className="placeholder col-7 mb-3" />
+                    <span className="placeholder col-12 mb-2" />
+                    <span className="placeholder col-10 mb-2" />
+                </div>
+                <p className="text-muted">{strings.react_wizard_loading || 'Loading…'}</p>
+            </div>
+        );
     }
-    if (!boot || !draft) {
-        return <p className="text-muted">{strings.react_wizard_loading || 'Loading…'}</p>;
+
+    if (error || !boot || !draft) {
+        return (
+            <div className="tool_murules-react-wizard">
+                <div className="alert alert-danger" role="alert">
+                    <p className="mb-2">{error || strings.react_wizard_error || 'Could not load wizard'}</p>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => setRetryToken((n) => n + 1)}
+                    >
+                        {strings.retry || 'Retry'}
+                    </button>
+                </div>
+                <a className="btn btn-link px-0" href={returnurl}>{strings.cancelwizard || 'Cancel'}</a>
+            </div>
+        );
     }
 
     return (
         <div className="tool_murules-react-wizard">
-            <nav className="tool_murules-wizard-steps mb-3" aria-label={strings.wizard_steps_label || 'Wizard'}>
-                <ul className="nav nav-pills flex-wrap gap-1">
-                    {STEPS.map((key, idx) => {
-                        let cls = 'nav-link';
-                        if (key === step) {
-                            cls += ' active';
-                        } else if (idx < stepIndex) {
-                            cls += ' text-success';
-                        }
-                        return (
-                            <li className="nav-item" key={key}>
-                                <span className={cls} aria-current={key === step ? 'step' : undefined}>
-                                    <span className="badge text-bg-light text-dark me-1" aria-hidden="true">
-                                        {idx + 1}
-                                    </span>
-                                    {strings[`wizard_${key}`] || key}
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ul>
-                <p className="tool_murules-wizard-progress text-muted small mb-0">
-                    {strings.wizard_progress
-                        ? strings.wizard_progress
-                            .replace('{$a->current}', String(stepIndex + 1))
-                            .replace('{$a->total}', String(STEPS.length))
-                            .replace('{$a->label}', strings[`wizard_${step}`] || step)
-                        : `Step ${stepIndex + 1} of ${STEPS.length}`}
+            <header className="tool_murules-wizard-header mb-3">
+                <h2 className="h3 mb-1">
+                    {draft.id ? strings.editrule : strings.createrule}
+                </h2>
+                <p className="text-muted mb-0">
+                    {strings.wizard_intro || strings.wizard_event_help}
                 </p>
-                {step === 'event' ? (
-                    <p className="tool_murules-wizard-next text-muted small mb-0">{strings.wizard_next_actions}</p>
-                ) : null}
-                {step === 'actions' ? (
-                    <p className="tool_murules-wizard-next text-muted small mb-0">{strings.wizard_next_review}</p>
-                ) : null}
-            </nav>
+            </header>
+
+            <Stepper current={step} strings={strings} />
 
             {step === 'event' ? (
                 <EventStep

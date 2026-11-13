@@ -18,6 +18,9 @@ function ReviewStep({
   onDraftChange
 }) {
   const [estimate, setEstimate] = useState("");
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [estimateError, setEstimateError] = useState("");
+  const [estimateRetry, setEstimateRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [nameError, setNameError] = useState("");
@@ -25,6 +28,8 @@ function ReviewStep({
   const thenSummary = draft.actions.map((a) => a.description || a.actiontype).join("; ");
   useEffect(() => {
     let cancelled = false;
+    setEstimateLoading(true);
+    setEstimateError("");
     estimateMatches(
       draft.conditions.map((c) => ({
         conditiontype: c.conditiontype,
@@ -34,15 +39,20 @@ function ReviewStep({
       if (!cancelled) {
         setEstimate(res.label);
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (!cancelled) {
         setEstimate("");
+        setEstimateError(err.message || strings.estimate_error || "Could not estimate matches");
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setEstimateLoading(false);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [draft.conditions]);
+  }, [draft.conditions, estimateRetry, strings.estimate_error]);
   const onSave = /* @__PURE__ */ __name(async () => {
     setError("");
     setNameError("");
@@ -65,7 +75,7 @@ function ReviewStep({
         if (result.errors.name) {
           setNameError(result.errors.name);
         }
-        setError(result.message || strings.react_wizard_error || "Save failed");
+        setError(result.message || strings.save_error || strings.react_wizard_error || "Save failed");
         return;
       }
       window.location.href = returnurl;
@@ -78,12 +88,12 @@ function ReviewStep({
   return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-review-step", children: [
     /* @__PURE__ */ jsxDEV("h3", { className: "h4", children: strings.wizard_review }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 97,
+      lineNumber: 107,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("p", { className: "text-muted", children: strings.wizard_review_help }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 98,
+      lineNumber: 108,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
@@ -92,7 +102,7 @@ function ReviewStep({
         " *"
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 101,
+        lineNumber: 111,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV(
@@ -108,19 +118,19 @@ function ReviewStep({
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-          lineNumber: 102,
+          lineNumber: 112,
           columnNumber: 17
         },
         this
       ),
       nameError ? /* @__PURE__ */ jsxDEV("div", { className: "invalid-feedback d-block", children: nameError }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 109,
+        lineNumber: 119,
         columnNumber: 30
       }, this) : null
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 100,
+      lineNumber: 110,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "form-check mb-3", children: [
@@ -137,25 +147,25 @@ function ReviewStep({
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-          lineNumber: 113,
+          lineNumber: 123,
           columnNumber: 17
         },
         this
       ),
       /* @__PURE__ */ jsxDEV("label", { className: "form-check-label", htmlFor: "murules_enabled", children: strings.enabled }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 120,
+        lineNumber: 130,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 112,
+      lineNumber: 122,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
       /* @__PURE__ */ jsxDEV("label", { className: "form-label", htmlFor: "murules_actionlimit", children: strings.actionlimit }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 124,
+        lineNumber: 134,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV(
@@ -167,7 +177,7 @@ function ReviewStep({
           onChange: (e) => onDraftChange({ actionlimit: e.target.value }),
           children: actionLimits.map((opt) => /* @__PURE__ */ jsxDEV("option", { value: opt.value, children: opt.label }, opt.value, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-            lineNumber: 132,
+            lineNumber: 142,
             columnNumber: 25
           }, this))
         },
@@ -175,14 +185,14 @@ function ReviewStep({
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-          lineNumber: 125,
+          lineNumber: 135,
           columnNumber: 17
         },
         this
       )
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 123,
+      lineNumber: 133,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "form-check mb-4", children: [
@@ -199,98 +209,145 @@ function ReviewStep({
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-          lineNumber: 138,
+          lineNumber: 148,
           columnNumber: 17
         },
         this
       ),
       /* @__PURE__ */ jsxDEV("label", { className: "form-check-label", htmlFor: "murules_suspended", children: strings.includesuspended }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 145,
+        lineNumber: 155,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 137,
+      lineNumber: 147,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("h4", { className: "h5", children: strings.wizard_review_recap }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 150,
+      lineNumber: 160,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "mb-2", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "small text-muted text-uppercase", children: strings.when }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 152,
+        lineNumber: 162,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-recap tool_murules-recap-when", children: whenSummary }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 153,
+        lineNumber: 163,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 151,
+      lineNumber: 161,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "small text-muted text-uppercase", children: strings.then }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 156,
+        lineNumber: 166,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-recap", children: thenSummary }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 157,
+        lineNumber: 167,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 155,
+      lineNumber: 165,
       columnNumber: 13
     }, this),
-    estimate ? /* @__PURE__ */ jsxDEV("p", { className: "text-muted", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
       /* @__PURE__ */ jsxDEV("strong", { children: [
         strings.matchingusers,
         ":"
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 161,
-        columnNumber: 21
+        lineNumber: 170,
+        columnNumber: 17
       }, this),
       " ",
-      estimate
+      estimateLoading ? /* @__PURE__ */ jsxDEV("span", { className: "text-muted", children: strings.estimating || "Estimating\u2026" }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+        lineNumber: 172,
+        columnNumber: 21
+      }, this) : estimate ? /* @__PURE__ */ jsxDEV("span", { className: "text-muted", children: estimate }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+        lineNumber: 174,
+        columnNumber: 21
+      }, this) : null,
+      estimateError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-warning mt-2 py-2", role: "alert", children: [
+        /* @__PURE__ */ jsxDEV("span", { className: "me-2", children: estimateError }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+          lineNumber: 178,
+          columnNumber: 25
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            className: "btn btn-sm btn-outline-secondary",
+            onClick: () => setEstimateRetry((n) => n + 1),
+            children: strings.retry || "Retry"
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+            lineNumber: 179,
+            columnNumber: 25
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+        lineNumber: 177,
+        columnNumber: 21
+      }, this) : null
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 160,
+      lineNumber: 169,
+      columnNumber: 13
+    }, this),
+    error ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-danger", role: "alert", children: [
+      /* @__PURE__ */ jsxDEV("p", { className: "mb-2", children: error }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+        lineNumber: 192,
+        columnNumber: 21
+      }, this),
+      /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-sm btn-outline-danger", disabled: busy, onClick: onSave, children: strings.retry || "Retry" }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+        lineNumber: 193,
+        columnNumber: 21
+      }, this)
+    ] }, void 0, true, {
+      fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
+      lineNumber: 191,
       columnNumber: 17
     }, this) : null,
-    error ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-danger", children: error }, void 0, false, {
-      fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 165,
-      columnNumber: 22
-    }, this) : null,
     /* @__PURE__ */ jsxDEV("div", { className: "d-flex flex-wrap gap-2", children: [
-      /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-primary", disabled: busy, onClick: onSave, children: strings.save }, void 0, false, {
+      /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-primary", disabled: busy, onClick: onSave, children: busy ? strings.saving || strings.save : strings.save }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 168,
+        lineNumber: 200,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-outline-secondary", disabled: busy, onClick: onBack, children: strings.back }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-        lineNumber: 171,
+        lineNumber: 203,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-      lineNumber: 167,
+      lineNumber: 199,
       columnNumber: 13
     }, this)
   ] }, void 0, true, {
     fileName: "public/admin/tool/murules/js/esm/src/components/ReviewStep.tsx",
-    lineNumber: 96,
+    lineNumber: 106,
     columnNumber: 9
   }, this);
 }

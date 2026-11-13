@@ -3,7 +3,15 @@
     "eject": "safe",
     "wrap": "safe"
   },
+  "components/ActionCards": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
   "components/ActionsStep": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "components/CategoryCards": {
     "eject": "safe",
     "wrap": "safe"
   },
@@ -16,6 +24,10 @@
     "wrap": "safe"
   },
   "components/SchemaForm": {
+    "eject": "safe",
+    "wrap": "safe"
+  },
+  "components/Stepper": {
     "eject": "safe",
     "wrap": "safe"
   },

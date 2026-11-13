@@ -230,5 +230,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111340, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111341) {
+        // Wizard UX polish (Connect-like stepper/cards) + hardening.
+        upgrade_plugin_savepoint(true, 2026111341, 'tool', 'murules');
+    }
+
     return true;
 }

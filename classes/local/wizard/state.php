@@ -154,7 +154,12 @@ final class state {
             'rulename', 'enabled', 'actionlimit', 'includesuspended', 'save', 'cancelwizard', 'back',
             'when', 'then', 'matchingusers', 'saveandcontinue', 'wizard_review_help', 'wizard_review_recap',
             'createrule', 'editrule', 'loadingcms', 'nocms', 'error_rulename',
-            'react_wizard_loading', 'react_wizard_error',
+            'react_wizard_loading', 'react_wizard_error', 'wizard_intro', 'wizard_current_step',
+            'category_card_hint', 'pickaction', 'pickaction_hint', 'pickaction_help',
+            'configure_action', 'changeaction', 'retry', 'form_has_errors', 'loading_editor',
+            'search_courses_placeholder', 'searching_courses', 'no_courses_found',
+            'course_search_error', 'selected_course', 'clear_course', 'choose_course_first',
+            'cms_load_error', 'estimate_error', 'estimating', 'save_error', 'saving',
         ];
         $out = [];
         foreach ($keys as $key) {
@@ -163,7 +168,6 @@ final class state {
         $out['select_action'] = get_string('actiontype', 'tool_murules');
         $out['search_courses'] = get_string('course', 'tool_murules');
         $out['choosedots'] = get_string('choosedots');
-        $out['saving'] = get_string('save', 'tool_murules');
         return $out;
     }
 }

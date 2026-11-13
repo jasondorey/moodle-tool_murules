@@ -56,7 +56,12 @@ function fromDatetimeLocal(value: string): number {
 export default function SchemaForm({schema, values, errors = {}, strings, onChange}: Props) {
     const [courseOptions, setCourseOptions] = useState<Array<{id: number; name: string}>>([]);
     const [courseQuery, setCourseQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [courseLoading, setCourseLoading] = useState(false);
+    const [courseError, setCourseError] = useState('');
     const [cmsByField, setCmsByField] = useState<Record<string, Array<{id: number; name: string}>>>({});
+    const [cmsLoading, setCmsLoading] = useState(false);
+    const [cmsError, setCmsError] = useState('');
 
     const courseFields = useMemo(
         () => schema.fields.filter((f) => f.type === 'course'),
@@ -68,24 +73,47 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
     );
 
     useEffect(() => {
+        const timer = window.setTimeout(() => setDebouncedQuery(courseQuery.trim()), 300);
+        return () => window.clearTimeout(timer);
+    }, [courseQuery]);
+
+    useEffect(() => {
+        if (!courseFields.length) {
+            return;
+        }
         let cancelled = false;
-        const preferred = courseFields.length ? Number(values[courseFields[0].name] || 0) : 0;
-        searchCourses(courseQuery, preferred).then((courses) => {
-            if (!cancelled) {
-                setCourseOptions(courses);
-            }
-        }).catch(() => {
-            if (!cancelled) {
-                setCourseOptions([]);
-            }
-        });
+        const preferred = Number(values[courseFields[0].name] || 0);
+        setCourseLoading(true);
+        setCourseError('');
+        searchCourses(debouncedQuery, preferred)
+            .then((courses) => {
+                if (!cancelled) {
+                    setCourseOptions(courses);
+                }
+            })
+            .catch((err: Error) => {
+                if (!cancelled) {
+                    setCourseOptions([]);
+                    setCourseError(err.message || strings.course_search_error || 'Course search failed');
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setCourseLoading(false);
+                }
+            });
         return () => {
             cancelled = true;
         };
-    }, [courseQuery, courseFields, values]);
+    }, [debouncedQuery, courseFields, values, strings.course_search_error]);
 
     useEffect(() => {
+        if (!cmFields.length) {
+            return;
+        }
         let cancelled = false;
+        setCmsLoading(true);
+        setCmsError('');
         Promise.all(
             cmFields.map(async (field) => {
                 const courseid = Number(values[field.dependsOn || 'courseid'] || 0);
@@ -93,29 +121,44 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
                 const cms = await loadCourseModules(courseid, mode);
                 return [field.name, cms] as const;
             }),
-        ).then((entries) => {
-            if (!cancelled) {
-                setCmsByField(Object.fromEntries(entries));
-            }
-        }).catch(() => {
-            if (!cancelled) {
-                setCmsByField({});
-            }
-        });
+        )
+            .then((entries) => {
+                if (!cancelled) {
+                    setCmsByField(Object.fromEntries(entries));
+                }
+            })
+            .catch((err: Error) => {
+                if (!cancelled) {
+                    setCmsByField({});
+                    setCmsError(err.message || strings.cms_load_error || 'Could not load activities');
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setCmsLoading(false);
+                }
+            });
         return () => {
             cancelled = true;
         };
-    }, [cmFields, values]);
+    }, [cmFields, values, strings.cms_load_error]);
 
     const setValue = (name: string, value: unknown) => {
         const next = {...values, [name]: value};
-        // Reset dependent CM when course changes.
         cmFields.forEach((field) => {
             if (field.dependsOn === name) {
                 next[field.name] = 0;
             }
         });
         onChange(next);
+    };
+
+    const selectedCourseLabel = (fieldName: string): string => {
+        const id = Number(values[fieldName] || 0);
+        if (!id) {
+            return '';
+        }
+        return courseOptions.find((c) => c.id === id)?.name || `#${id}`;
     };
 
     return (
@@ -135,16 +178,46 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
 
                 let control: ReactNode = null;
                 if (field.type === 'course') {
+                    const selectedLabel = selectedCourseLabel(field.name);
                     control = (
                         <div className="d-flex flex-column gap-2">
+                            {selectedLabel ? (
+                                <div className="alert alert-secondary py-2 px-3 mb-0 d-flex align-items-center justify-content-between gap-2">
+                                    <span>
+                                        <span className="small text-muted d-block">
+                                            {strings.selected_course || 'Selected course'}
+                                        </span>
+                                        <strong>{selectedLabel}</strong>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() => setValue(field.name, 0)}
+                                    >
+                                        {strings.clear_course || 'Clear'}
+                                    </button>
+                                </div>
+                            ) : null}
                             <input
                                 type="search"
-                                className="form-control form-control-sm"
-                                placeholder={strings.search_courses || 'Course'}
+                                className="form-control"
+                                placeholder={strings.search_courses_placeholder || strings.search_courses || 'Search courses'}
                                 value={courseQuery}
                                 onChange={(e) => setCourseQuery(e.target.value)}
                                 aria-label={strings.search_courses || 'Course'}
+                                autoComplete="off"
                             />
+                            {courseLoading ? (
+                                <div className="small text-muted">{strings.searching_courses || 'Searching…'}</div>
+                            ) : null}
+                            {courseError ? (
+                                <div className="alert alert-warning py-2 mb-0" role="alert">{courseError}</div>
+                            ) : null}
+                            {!courseLoading && !courseError && courseOptions.length === 0 ? (
+                                <div className="small text-muted">
+                                    {strings.no_courses_found || 'No courses match your search.'}
+                                </div>
+                            ) : null}
                             <select
                                 id={id}
                                 className={`form-select${err ? ' is-invalid' : ''}`}
@@ -160,21 +233,34 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
                     );
                 } else if (field.type === 'coursemodule') {
                     const cms = cmsByField[field.name] || [];
+                    const hasCourse = !!Number(values[field.dependsOn || 'courseid'] || 0);
                     control = (
-                        <select
-                            id={id}
-                            className={`form-select${err ? ' is-invalid' : ''}`}
-                            value={String(values[field.name] ?? 0)}
-                            onChange={(e) => setValue(field.name, Number(e.target.value) || 0)}
-                            disabled={!Number(values[field.dependsOn || 'courseid'] || 0)}
-                        >
-                            <option value="0">
-                                {cms.length ? (strings.choosedots || '…') : (strings.nocms || 'No activities')}
-                            </option>
-                            {cms.map((cm) => (
-                                <option key={cm.id} value={cm.id}>{cm.name}</option>
-                            ))}
-                        </select>
+                        <div>
+                            {cmsLoading ? (
+                                <div className="small text-muted mb-1">{strings.loadingcms || 'Loading…'}</div>
+                            ) : null}
+                            {cmsError ? (
+                                <div className="alert alert-warning py-2 mb-2" role="alert">{cmsError}</div>
+                            ) : null}
+                            <select
+                                id={id}
+                                className={`form-select${err ? ' is-invalid' : ''}`}
+                                value={String(values[field.name] ?? 0)}
+                                onChange={(e) => setValue(field.name, Number(e.target.value) || 0)}
+                                disabled={!hasCourse || cmsLoading}
+                            >
+                                <option value="0">
+                                    {!hasCourse
+                                        ? (strings.choose_course_first || strings.choosedots || '…')
+                                        : cms.length
+                                            ? (strings.choosedots || '…')
+                                            : (strings.nocms || 'No activities')}
+                                </option>
+                                {cms.map((cm) => (
+                                    <option key={cm.id} value={cm.id}>{cm.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     );
                 } else if (field.type === 'select') {
                     control = (

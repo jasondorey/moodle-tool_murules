@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111340;
+$plugin->version   = 2026111341;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.6.0-reactWizard';
+$plugin->release   = '0.6.1-wizardPolish';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,

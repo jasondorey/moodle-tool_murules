@@ -27,6 +27,9 @@ export default function ReviewStep({
     onDraftChange,
 }: Props) {
     const [estimate, setEstimate] = useState('');
+    const [estimateLoading, setEstimateLoading] = useState(false);
+    const [estimateError, setEstimateError] = useState('');
+    const [estimateRetry, setEstimateRetry] = useState(0);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [nameError, setNameError] = useState('');
@@ -40,6 +43,8 @@ export default function ReviewStep({
 
     useEffect(() => {
         let cancelled = false;
+        setEstimateLoading(true);
+        setEstimateError('');
         estimateMatches(
             draft.conditions.map((c) => ({
                 conditiontype: c.conditiontype,
@@ -49,15 +54,20 @@ export default function ReviewStep({
             if (!cancelled) {
                 setEstimate(res.label);
             }
-        }).catch(() => {
+        }).catch((err: Error) => {
             if (!cancelled) {
                 setEstimate('');
+                setEstimateError(err.message || strings.estimate_error || 'Could not estimate matches');
+            }
+        }).finally(() => {
+            if (!cancelled) {
+                setEstimateLoading(false);
             }
         });
         return () => {
             cancelled = true;
         };
-    }, [draft.conditions]);
+    }, [draft.conditions, estimateRetry, strings.estimate_error]);
 
     const onSave = async () => {
         setError('');
@@ -81,7 +91,7 @@ export default function ReviewStep({
                 if (result.errors.name) {
                     setNameError(result.errors.name);
                 }
-                setError(result.message || strings.react_wizard_error || 'Save failed');
+                setError(result.message || strings.save_error || strings.react_wizard_error || 'Save failed');
                 return;
             }
             window.location.href = returnurl;
@@ -156,17 +166,39 @@ export default function ReviewStep({
                 <div className="small text-muted text-uppercase">{strings.then}</div>
                 <div className="tool_murules-recap">{thenSummary}</div>
             </div>
-            {estimate ? (
-                <p className="text-muted">
-                    <strong>{strings.matchingusers}:</strong> {estimate}
-                </p>
-            ) : null}
+            <div className="mb-3">
+                <strong>{strings.matchingusers}:</strong>{' '}
+                {estimateLoading ? (
+                    <span className="text-muted">{strings.estimating || 'Estimating…'}</span>
+                ) : estimate ? (
+                    <span className="text-muted">{estimate}</span>
+                ) : null}
+                {estimateError ? (
+                    <div className="alert alert-warning mt-2 py-2" role="alert">
+                        <span className="me-2">{estimateError}</span>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setEstimateRetry((n) => n + 1)}
+                        >
+                            {strings.retry || 'Retry'}
+                        </button>
+                    </div>
+                ) : null}
+            </div>
 
-            {error ? <div className="alert alert-danger">{error}</div> : null}
+            {error ? (
+                <div className="alert alert-danger" role="alert">
+                    <p className="mb-2">{error}</p>
+                    <button type="button" className="btn btn-sm btn-outline-danger" disabled={busy} onClick={onSave}>
+                        {strings.retry || 'Retry'}
+                    </button>
+                </div>
+            ) : null}
 
             <div className="d-flex flex-wrap gap-2">
                 <button type="button" className="btn btn-primary" disabled={busy} onClick={onSave}>
-                    {strings.save}
+                    {busy ? (strings.saving || strings.save) : strings.save}
                 </button>
                 <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={onBack}>
                     {strings.back}

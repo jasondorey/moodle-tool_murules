@@ -80,7 +80,7 @@
 }
 
 .tool_murules-react-wizard {
-    max-width: 46rem;
+    max-width: 52rem;
 }
 
 .tool_murules-react-mount {
@@ -89,4 +89,97 @@
 
 .tool_murules-action-picker {
     max-width: 42rem;
+}
+
+/* Connect-like stepper */
+.tool_murules-stepper-list {
+    gap: 0;
+}
+
+.tool_murules-stepper-item {
+    position: relative;
+    flex: 1 1 8rem;
+    min-width: 7rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.tool_murules-stepper-body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tool_murules-stepper-index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--bs-body-bg, #fff);
+    flex: 0 0 auto;
+}
+
+.tool_murules-stepper-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.tool_murules-stepper-item.is-active .tool_murules-stepper-label {
+    color: var(--bs-primary);
+}
+
+.tool_murules-stepper-item.is-done .tool_murules-stepper-label {
+    color: var(--bs-success);
+}
+
+.tool_murules-stepper-connector {
+    display: none;
+}
+
+@media (min-width: 576px) {
+    .tool_murules-stepper-item:not(:first-child) .tool_murules-stepper-connector {
+        display: block;
+        position: absolute;
+        left: -0.35rem;
+        top: 1.15rem;
+        width: 0.7rem;
+        height: 2px;
+        background: var(--bs-border-color, #dee2e6);
+    }
+
+    .tool_murules-stepper-item.is-done .tool_murules-stepper-connector,
+    .tool_murules-stepper-item.is-active .tool_murules-stepper-connector {
+        background: var(--bs-primary);
+    }
+}
+
+/* Category / action cards */
+.tool_murules-category-card-header {
+    background: var(--bs-body-bg, #fff);
+    border: 0;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: var(--bs-border-radius, 0.375rem) var(--bs-border-radius, 0.375rem) 0 0;
+}
+
+.tool_murules-category-card.is-open {
+    box-shadow: 0 0 0 0.05rem rgba(var(--bs-primary-rgb, 13, 110, 253), 0.25);
+}
+
+.tool_murules-action-card {
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tool_murules-action-card:hover,
+.tool_murules-action-card:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.05rem rgba(var(--bs-primary-rgb, 13, 110, 253), 0.2);
+}
+
+.tool_murules-saved-list .list-group-item {
+    background: var(--bs-body-bg, #fff);
 }
