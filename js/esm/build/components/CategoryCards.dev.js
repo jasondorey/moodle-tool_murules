@@ -2,47 +2,86 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { jsxDEV } from "react/jsx-dev-runtime";
 /**
- * Category cards for the Event picker (Connect-like, Bootstrap cards).
+ * Event category dropdown + single category card (events list).
  *
  * @module tool_murules/components/CategoryCards
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 function CategoryCards({ catalog, strings, onPick }) {
-  const [openKey, setOpenKey] = useState(catalog[0]?.key || "");
-  return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-category-cards row g-3", children: catalog.map((cat) => {
-    const open = openKey === cat.key;
-    return /* @__PURE__ */ jsxDEV("div", { className: "col-12 col-md-6", children: /* @__PURE__ */ jsxDEV("div", { className: `card h-100 tool_murules-category-card${open ? " is-open border-primary" : ""}`, children: [
+  const [selectedKey, setSelectedKey] = useState("");
+  const selected = useMemo(
+    () => catalog.find((c) => c.key === selectedKey) || null,
+    [catalog, selectedKey]
+  );
+  return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-category-picker", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
+      /* @__PURE__ */ jsxDEV("label", { className: "form-label", htmlFor: "murules_event_category", children: strings.choose_category || "Category" }, void 0, false, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
+        lineNumber: 27,
+        columnNumber: 17
+      }, this),
       /* @__PURE__ */ jsxDEV(
-        "button",
+        "select",
         {
-          type: "button",
-          className: "card-header tool_murules-category-card-header btn text-start w-100 d-flex align-items-center justify-content-between gap-2",
-          "aria-expanded": open,
-          onClick: () => setOpenKey(open ? "" : cat.key),
+          id: "murules_event_category",
+          className: "form-select",
+          value: selectedKey,
+          onChange: (e) => setSelectedKey(e.target.value),
           children: [
-            /* @__PURE__ */ jsxDEV("span", { className: "fw-semibold", children: cat.label }, void 0, false, {
+            /* @__PURE__ */ jsxDEV("option", { value: "", children: strings.choose_category_placeholder || strings.choosedots || "\u2026" }, void 0, false, {
               fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-              lineNumber: 33,
-              columnNumber: 33
+              lineNumber: 36,
+              columnNumber: 21
             }, this),
-            /* @__PURE__ */ jsxDEV("span", { className: "badge text-bg-secondary", children: cat.count }, void 0, false, {
+            catalog.map((cat) => /* @__PURE__ */ jsxDEV("option", { value: cat.key, children: [
+              cat.label,
+              " (",
+              cat.count,
+              ")"
+            ] }, cat.key, true, {
               fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-              lineNumber: 34,
-              columnNumber: 33
-            }, this)
+              lineNumber: 38,
+              columnNumber: 25
+            }, this))
           ]
         },
         void 0,
         true,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-          lineNumber: 27,
-          columnNumber: 29
+          lineNumber: 30,
+          columnNumber: 17
         },
         this
-      ),
-      open ? /* @__PURE__ */ jsxDEV("ul", { className: "list-group list-group-flush", children: cat.items.map((item) => /* @__PURE__ */ jsxDEV("li", { className: "list-group-item p-0", children: /* @__PURE__ */ jsxDEV(
+      )
+    ] }, void 0, true, {
+      fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
+      lineNumber: 26,
+      columnNumber: 13
+    }, this),
+    !selected ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-secondary mb-0", children: strings.choose_category_help || "Select a category to see available events." }, void 0, false, {
+      fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
+      lineNumber: 46,
+      columnNumber: 17
+    }, this) : /* @__PURE__ */ jsxDEV("div", { className: "card tool_murules-category-card is-open border-primary", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "card-header d-flex align-items-center justify-content-between gap-2", children: [
+        /* @__PURE__ */ jsxDEV("span", { className: "fw-semibold", children: selected.label }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
+          lineNumber: 52,
+          columnNumber: 25
+        }, this),
+        /* @__PURE__ */ jsxDEV("span", { className: "badge text-bg-secondary", children: selected.count }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
+          lineNumber: 53,
+          columnNumber: 25
+        }, this)
+      ] }, void 0, true, {
+        fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
+        lineNumber: 51,
+        columnNumber: 21
+      }, this),
+      /* @__PURE__ */ jsxDEV("ul", { className: "list-group list-group-flush", children: selected.items.map((item) => /* @__PURE__ */ jsxDEV("li", { className: "list-group-item p-0", children: /* @__PURE__ */ jsxDEV(
         "button",
         {
           type: "button",
@@ -52,23 +91,23 @@ function CategoryCards({ catalog, strings, onPick }) {
             /* @__PURE__ */ jsxDEV("span", { children: [
               /* @__PURE__ */ jsxDEV("span", { className: "d-block fw-semibold", children: item.name }, void 0, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-                lineNumber: 46,
-                columnNumber: 53
+                lineNumber: 64,
+                columnNumber: 41
               }, this),
               /* @__PURE__ */ jsxDEV("span", { className: "small text-muted", children: strings.pickcondition_hint || "" }, void 0, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-                lineNumber: 47,
-                columnNumber: 53
+                lineNumber: 65,
+                columnNumber: 41
               }, this)
             ] }, void 0, true, {
               fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-              lineNumber: 45,
-              columnNumber: 49
+              lineNumber: 63,
+              columnNumber: 37
             }, this),
             /* @__PURE__ */ jsxDEV("span", { className: "btn btn-sm btn-primary", children: strings.pickcondition }, void 0, false, {
               fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-              lineNumber: 51,
-              columnNumber: 49
+              lineNumber: 69,
+              columnNumber: 37
             }, this)
           ]
         },
@@ -76,39 +115,27 @@ function CategoryCards({ catalog, strings, onPick }) {
         true,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-          lineNumber: 40,
-          columnNumber: 45
+          lineNumber: 58,
+          columnNumber: 33
         },
         this
       ) }, item.type, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-        lineNumber: 39,
-        columnNumber: 41
+        lineNumber: 57,
+        columnNumber: 29
       }, this)) }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-        lineNumber: 37,
-        columnNumber: 33
-      }, this) : /* @__PURE__ */ jsxDEV("div", { className: "card-body py-2", children: /* @__PURE__ */ jsxDEV("p", { className: "card-text small text-muted mb-0", children: strings.category_card_hint || "Expand to choose an event" }, void 0, false, {
-        fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-        lineNumber: 60,
-        columnNumber: 37
-      }, this) }, void 0, false, {
-        fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-        lineNumber: 59,
-        columnNumber: 33
+        lineNumber: 55,
+        columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-      lineNumber: 26,
-      columnNumber: 25
-    }, this) }, cat.key, false, {
-      fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-      lineNumber: 25,
-      columnNumber: 21
-    }, this);
-  }) }, void 0, false, {
+      lineNumber: 50,
+      columnNumber: 17
+    }, this)
+  ] }, void 0, true, {
     fileName: "public/admin/tool/murules/js/esm/src/components/CategoryCards.tsx",
-    lineNumber: 21,
+    lineNumber: 25,
     columnNumber: 9
   }, this);
 }
