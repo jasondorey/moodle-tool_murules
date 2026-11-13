@@ -106,5 +106,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Wizard Cancel vs Back button labels.
         upgrade_plugin_savepoint(true, 2026111319, 'tool', 'murules');
     }
+    if ($oldversion < 2026111320) {
+        // Log showing context + result count line.
+        upgrade_plugin_savepoint(true, 2026111320, 'tool', 'murules');
+    }
     return true;
 }

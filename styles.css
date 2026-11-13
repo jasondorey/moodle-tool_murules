@@ -298,6 +298,11 @@
     color: #5a6675;
 }
 
+.tool_murules-log-count {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
 .tool_murules-status {
     display: inline-block;
     padding: 0.1rem 0.45rem;

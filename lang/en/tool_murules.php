@@ -127,6 +127,7 @@ $string['log_filter_skipped'] = 'Skipped';
 $string['log_filter_failed'] = 'Failed';
 $string['log_filter_empty_title'] = 'No entries for this status';
 $string['log_filter_empty'] = 'Try another status filter.';
+$string['log_resultcount'] = 'Showing {$a->shown} of {$a->total} entries';
 $string['realtimeobservers'] = 'Realtime event observers';
 $string['realtimeobservers_desc'] = 'Queue matching when relevant events fire.';
 $string['maxbackfillbatch'] = 'Max backfill batch size';

@@ -102,6 +102,14 @@ foreach ($allowedstatus as $key) {
 $filterhtml .= html_writer::end_tag('nav');
 echo $filterhtml;
 
+if ($statusfilter !== 'all') {
+    echo html_writer::tag(
+        'p',
+        get_string('overview_showing', 'tool_murules', get_string('log_filter_' . $statusfilter, 'tool_murules')),
+        ['class' => 'tool_murules-showing', 'aria-live' => 'polite']
+    );
+}
+
 $params = ['ruleid' => $id];
 $wheresql = 'ruleid = :ruleid';
 if ($statusfilter !== 'all') {
@@ -167,6 +175,14 @@ foreach ($records as $rec) {
     ];
 }
 
+echo html_writer::tag(
+    'p',
+    get_string('log_resultcount', 'tool_murules', (object)[
+        'shown' => count($records),
+        'total' => $total,
+    ]),
+    ['class' => 'tool_murules-log-count text-muted']
+);
 echo html_writer::table($table);
 echo $OUTPUT->paging_bar($total, $page, $perpage, $PAGE->url);
 echo $OUTPUT->footer();
