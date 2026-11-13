@@ -216,6 +216,11 @@
     font-size: 0.8rem;
 }
 
+.tool_murules-lastapplied.is-never {
+    color: var(--murules-muted);
+    font-style: italic;
+}
+
 .tool_murules-actions {
     margin-top: 0.85rem;
     display: flex;

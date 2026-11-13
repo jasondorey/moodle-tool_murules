@@ -122,5 +122,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Log CSV export + Back to rules nav label.
         upgrade_plugin_savepoint(true, 2026111323, 'tool', 'murules');
     }
+    if ($oldversion < 2026111324) {
+        // Card "Not applied yet" + named aria-labels on actions.
+        upgrade_plugin_savepoint(true, 2026111324, 'tool', 'murules');
+    }
     return true;
 }

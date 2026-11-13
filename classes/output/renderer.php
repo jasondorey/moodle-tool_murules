@@ -95,19 +95,25 @@ class renderer extends plugin_renderer_base {
                 'haslastapplied' => $lastts > 0,
                 'lastapplied' => $lastts > 0
                     ? get_string('lastapplied', 'tool_murules', userdate($lastts, get_string('strftimedatetimeshort', 'langconfig')))
-                    : '',
+                    : get_string('neverapplied', 'tool_murules'),
                 'editurl' => (new \moodle_url('/admin/tool/murules/edit.php', ['id' => $rec->id]))->out(false),
+                'editlabel' => get_string('editrule_action', 'tool_murules', format_string($rec->name)),
                 'toggleurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
                     'action' => 'toggle',
                     'id' => $rec->id,
                     'sesskey' => sesskey(),
                 ])))->out(false),
+                'togglelabel' => $enabled
+                    ? get_string('togglerule_disable', 'tool_murules', format_string($rec->name))
+                    : get_string('togglerule_enable', 'tool_murules', format_string($rec->name)),
                 'logurl' => (new \moodle_url('/admin/tool/murules/log.php', ['id' => $rec->id]))->out(false),
+                'loglabel' => get_string('viewlog_action', 'tool_murules', format_string($rec->name)),
                 'deleteurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
                     'action' => 'delete',
                     'id' => $rec->id,
                     'sesskey' => sesskey(),
                 ])))->out(false),
+                'deletelabel' => get_string('deleterule_action', 'tool_murules', format_string($rec->name)),
             ];
             $all[] = $card;
             $counts['all']++;

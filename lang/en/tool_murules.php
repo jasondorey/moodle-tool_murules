@@ -56,6 +56,12 @@ $string['when'] = 'WHEN';
 $string['then'] = 'THEN';
 $string['matchstats'] = '{$a->applied} applied · {$a->skipped} skipped · {$a->failed} failed';
 $string['lastapplied'] = 'Last applied {$a}';
+$string['neverapplied'] = 'Not applied yet';
+$string['editrule_action'] = 'Edit {$a}';
+$string['togglerule_disable'] = 'Disable {$a}';
+$string['togglerule_enable'] = 'Enable {$a}';
+$string['viewlog_action'] = 'View log for {$a}';
+$string['deleterule_action'] = 'Delete {$a}';
 
 $string['wizard_event'] = 'Event';
 $string['wizard_actions'] = 'Actions';
