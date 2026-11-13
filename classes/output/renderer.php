@@ -33,15 +33,24 @@ class renderer extends plugin_renderer_base {
     /**
      * Overview cards.
      *
+     * @param string $filter all|enabled|disabled|broken
      * @return string
      */
-    public function rule_cards(): string {
-        $rules = [];
+    public function rule_cards(string $filter = 'all'): string {
+        $allowed = ['all', 'enabled', 'disabled', 'broken'];
+        if (!in_array($filter, $allowed, true)) {
+            $filter = 'all';
+        }
+        $filterparams = $filter === 'all' ? [] : ['filter' => $filter];
+
+        $all = [];
+        $counts = ['all' => 0, 'enabled' => 0, 'disabled' => 0, 'broken' => 0];
         foreach (rule::get_all() as $rec) {
             $condition = registry::get_condition($rec->conditiontype);
-            $when = $condition
-                ? $condition->get_description(rule::condition_config($rec))
-                : $rec->conditiontype;
+            $config = rule::condition_config($rec);
+            $broken = $condition ? $condition->is_broken($config) : true;
+            $enabled = (int)$rec->enabled === 1;
+            $when = $condition ? $condition->get_description($config) : $rec->conditiontype;
 
             $actions = rule::get_actions((int)$rec->id);
             $thenparts = [];
@@ -56,33 +65,64 @@ class renderer extends plugin_renderer_base {
                 }
             }
             $stats = rule::get_match_stats((int)$rec->id);
-            $config = rule::condition_config($rec);
-            $broken = $condition ? $condition->is_broken($config) : true;
-            $rules[] = [
+            $card = [
                 'name' => format_string($rec->name),
-                'enabled' => (int)$rec->enabled === 1,
+                'enabled' => $enabled,
                 'broken' => $broken,
                 'when' => $when,
                 'then' => implode('; ', $thenparts),
                 'stats' => get_string('matchstats', 'tool_murules', (object)$stats),
                 'editurl' => (new \moodle_url('/admin/tool/murules/edit.php', ['id' => $rec->id]))->out(false),
-                'toggleurl' => (new \moodle_url('/admin/tool/murules/index.php', [
+                'toggleurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
                     'action' => 'toggle',
                     'id' => $rec->id,
                     'sesskey' => sesskey(),
-                ]))->out(false),
+                ])))->out(false),
                 'logurl' => (new \moodle_url('/admin/tool/murules/log.php', ['id' => $rec->id]))->out(false),
-                'deleteurl' => (new \moodle_url('/admin/tool/murules/index.php', [
+                'deleteurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
                     'action' => 'delete',
                     'id' => $rec->id,
                     'sesskey' => sesskey(),
-                ]))->out(false),
+                ])))->out(false),
+            ];
+            $all[] = $card;
+            $counts['all']++;
+            if ($enabled) {
+                $counts['enabled']++;
+            } else {
+                $counts['disabled']++;
+            }
+            if ($broken) {
+                $counts['broken']++;
+            }
+        }
+
+        $rules = array_values(array_filter($all, static function(array $card) use ($filter): bool {
+            return match ($filter) {
+                'enabled' => $card['enabled'],
+                'disabled' => !$card['enabled'],
+                'broken' => $card['broken'],
+                default => true,
+            };
+        }));
+
+        $filters = [];
+        foreach ($allowed as $key) {
+            $filters[] = [
+                'key' => $key,
+                'label' => get_string('filter_' . $key, 'tool_murules'),
+                'count' => $counts[$key],
+                'url' => (new \moodle_url('/admin/tool/murules/index.php', $key === 'all' ? [] : ['filter' => $key]))->out(false),
+                'selected' => $key === $filter,
             ];
         }
 
         return $this->render_from_template('tool_murules/rule_cards', [
-            'hasrules' => !empty($rules),
+            'hasrules' => !empty($all),
+            'hasvisible' => !empty($rules),
             'rules' => $rules,
+            'filters' => $filters,
+            'filterempty' => empty($rules) && !empty($all),
             'createurl' => (new \moodle_url('/admin/tool/murules/edit.php'))->out(false),
         ]);
     }

@@ -54,11 +54,16 @@ class rule_review extends \moodleform {
         $mform->addElement('advcheckbox', 'includesuspended', get_string('includesuspended', 'tool_murules'));
         $mform->setDefault('includesuspended', $custom['includesuspended'] ?? 0);
 
+        $mform->addElement('header', 'hdr_recap', get_string('wizard_review_recap', 'tool_murules'));
+        $mform->setExpanded('hdr_recap', true);
+
         if (!empty($custom['when_summary'])) {
-            $mform->addElement('static', 'when_summary', get_string('when', 'tool_murules'), s($custom['when_summary']));
+            $whenhtml = \html_writer::div(s($custom['when_summary']), 'tool_murules-recap tool_murules-recap-when');
+            $mform->addElement('static', 'when_summary', get_string('when', 'tool_murules'), $whenhtml);
         }
         if (!empty($custom['then_summary'])) {
-            $mform->addElement('static', 'then_summary', get_string('then', 'tool_murules'), s($custom['then_summary']));
+            $thenhtml = \html_writer::div(s($custom['then_summary']), 'tool_murules-recap tool_murules-recap-then');
+            $mform->addElement('static', 'then_summary', get_string('then', 'tool_murules'), $thenhtml);
         }
         if (array_key_exists('match_estimate_html', $custom)) {
             $mform->addElement(

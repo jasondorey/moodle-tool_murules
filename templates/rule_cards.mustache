@@ -1,10 +1,17 @@
 {{!
     @template tool_murules/rule_cards
 
-    Overview WHEN→THEN rule cards.
+    Overview WHEN→THEN rule cards with status filters.
 }}
 <div class="tool_murules-overview">
     <div class="tool_murules-toolbar">
+        <nav class="tool_murules-filters" aria-label="{{#str}} filter_label, tool_murules {{/str}}">
+            {{#filters}}
+                <a class="tool_murules-filter{{#selected}} is-selected{{/selected}}" href="{{url}}" {{#selected}}aria-current="page"{{/selected}}>
+                    {{label}} <span class="tool_murules-filter-count">{{count}}</span>
+                </a>
+            {{/filters}}
+        </nav>
         <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
     </div>
     {{^hasrules}}
@@ -15,12 +22,20 @@
         </div>
     {{/hasrules}}
     {{#hasrules}}
-        <div class="tool_murules-cards" role="list">
-            {{#rules}}
-                <div role="listitem">
-                    {{> tool_murules/rule_card}}
-                </div>
-            {{/rules}}
-        </div>
+        {{#filterempty}}
+            <div class="tool_murules-empty">
+                <h3 class="tool_murules-empty-title">{{#str}} filter_empty_title, tool_murules {{/str}}</h3>
+                <p class="tool_murules-empty-body">{{#str}} filter_empty, tool_murules {{/str}}</p>
+            </div>
+        {{/filterempty}}
+        {{#hasvisible}}
+            <div class="tool_murules-cards" role="list">
+                {{#rules}}
+                    <div role="listitem">
+                        {{> tool_murules/rule_card}}
+                    </div>
+                {{/rules}}
+            </div>
+        {{/hasvisible}}
     {{/hasrules}}
 </div>

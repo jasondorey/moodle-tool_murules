@@ -27,12 +27,12 @@
     </div>
     <div class="tool_murules-stats">{{stats}}</div>
     <div class="tool_murules-actions">
-        <a class="btn btn-secondary btn-sm" href="{{editurl}}">{{#str}} edit {{/str}}</a>
+        <a class="btn btn-secondary btn-sm" href="{{editurl}}" title="{{#str}} editrule, tool_murules {{/str}}">{{#str}} edit {{/str}}</a>
         <a class="btn btn-secondary btn-sm" href="{{toggleurl}}">
             {{#enabled}}{{#str}} disablerule, tool_murules {{/str}}{{/enabled}}
             {{^enabled}}{{#str}} enablerule, tool_murules {{/str}}{{/enabled}}
         </a>
         <a class="btn btn-secondary btn-sm" href="{{logurl}}">{{#str}} viewlog, tool_murules {{/str}}</a>
-        <a class="btn btn-danger btn-sm" href="{{deleteurl}}">{{#str}} delete {{/str}}</a>
+        <a class="btn btn-outline-danger btn-sm" href="{{deleteurl}}">{{#str}} delete {{/str}}</a>
     </div>
 </article>

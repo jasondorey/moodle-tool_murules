@@ -54,5 +54,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Log status pills styling.
         upgrade_plugin_savepoint(true, 2026111306, 'tool', 'murules');
     }
+    if ($oldversion < 2026111307) {
+        // Overview filters, allocate empty hint, review recap styling.
+        upgrade_plugin_savepoint(true, 2026111307, 'tool', 'murules');
+    }
     return true;
 }

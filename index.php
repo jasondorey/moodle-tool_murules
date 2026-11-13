@@ -30,19 +30,25 @@ require_capability('tool/murules:manage', context_system::instance());
 
 $action = optional_param('action', '', PARAM_ALPHA);
 $id = optional_param('id', 0, PARAM_INT);
+$filter = optional_param('filter', 'all', PARAM_ALPHA);
+$allowedfilters = ['all', 'enabled', 'disabled', 'broken'];
+if (!in_array($filter, $allowedfilters, true)) {
+    $filter = 'all';
+}
+$returnparams = $filter === 'all' ? [] : ['filter' => $filter];
 
 if ($action && $id) {
     require_sesskey();
     $rulerec = \tool_murules\local\rule::get($id);
     if ($action === 'toggle') {
         \tool_murules\local\rule::set_enabled($id, !(int)$rulerec->enabled);
-        redirect(new moodle_url('/admin/tool/murules/index.php'));
+        redirect(new moodle_url('/admin/tool/murules/index.php', $returnparams));
     }
     if ($action === 'delete') {
         $confirm = optional_param('confirm', 0, PARAM_BOOL);
         if ($confirm) {
             \tool_murules\local\rule::delete($id);
-            redirect(new moodle_url('/admin/tool/murules/index.php'));
+            redirect(new moodle_url('/admin/tool/murules/index.php', $returnparams));
         }
         echo $OUTPUT->header();
         echo $OUTPUT->confirm(
@@ -52,15 +58,16 @@ if ($action && $id) {
                 'id' => $id,
                 'confirm' => 1,
                 'sesskey' => sesskey(),
+                'filter' => $filter,
             ]),
-            new moodle_url('/admin/tool/murules/index.php')
+            new moodle_url('/admin/tool/murules/index.php', $returnparams)
         );
         echo $OUTPUT->footer();
         exit;
     }
 }
 
-$PAGE->set_url(new moodle_url('/admin/tool/murules/index.php'));
+$PAGE->set_url(new moodle_url('/admin/tool/murules/index.php', $returnparams));
 $PAGE->set_title(get_string('rulesoverview', 'tool_murules'));
 $PAGE->set_heading(get_string('rulesoverview', 'tool_murules'));
 
@@ -68,5 +75,5 @@ $PAGE->set_heading(get_string('rulesoverview', 'tool_murules'));
 $renderer = $PAGE->get_renderer('tool_murules');
 
 echo $OUTPUT->header();
-echo $renderer->rule_cards();
+echo $renderer->rule_cards($filter);
 echo $OUTPUT->footer();
