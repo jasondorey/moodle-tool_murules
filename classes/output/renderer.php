@@ -157,6 +157,9 @@ class renderer extends plugin_renderer_base {
         $settingsurl = (new \moodle_url('/admin/settings.php', ['section' => 'tool_murules_settings']))->out(false);
         $searchaction = (new \moodle_url('/admin/tool/murules/index.php'))->out(false);
 
+        $shown = count($rules);
+        $total = count($all);
+
         return $this->render_from_template('tool_murules/rule_cards', [
             'hasrules' => !empty($all),
             'hasvisible' => !empty($rules),
@@ -173,6 +176,11 @@ class renderer extends plugin_renderer_base {
             'hasquery' => $query !== '',
             'filtervalue' => $filter !== 'all' ? $filter : '',
             'clearurl' => (new \moodle_url('/admin/tool/murules/index.php', $filter !== 'all' ? ['filter' => $filter] : []))->out(false),
+            'hasresultcount' => $shown > 0,
+            'resultcount' => get_string('overview_resultcount', 'tool_murules', (object)[
+                'shown' => $shown,
+                'total' => $total,
+            ]),
         ]);
     }
 

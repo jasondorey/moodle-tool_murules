@@ -29,6 +29,11 @@
     font-weight: 600;
 }
 
+.tool_murules-resultcount {
+    margin: 0 0 0.65rem;
+    font-size: 0.9rem;
+}
+
 .tool_murules-toolbar {
     display: flex;
     flex-wrap: wrap;

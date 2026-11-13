@@ -114,5 +114,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Empty-state copy polish + create CTA on filter-empty.
         upgrade_plugin_savepoint(true, 2026111321, 'tool', 'murules');
     }
+    if ($oldversion < 2026111322) {
+        // Overview "Showing N of M rules" count line.
+        upgrade_plugin_savepoint(true, 2026111322, 'tool', 'murules');
+    }
     return true;
 }

@@ -76,6 +76,7 @@ $string['searchrules_placeholder'] = 'Search by rule name';
 $string['clearsearch'] = 'Clear search';
 $string['searchquery_label'] = '“{$a}”';
 $string['overview_showing'] = 'Showing: {$a}';
+$string['overview_resultcount'] = 'Showing {$a->shown} of {$a->total} rules';
 $string['noprograms_manual'] = 'No programs with a manual allocation source are available. Create a MuTMS program with a manual source first.';
 $string['nocohorts'] = 'No cohorts are available yet. Create a cohort first, then return to configure this action.';
 $string['program_allocate'] = 'Program';
