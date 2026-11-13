@@ -82,5 +82,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Wizard back-to-rules link, Actions WHEN context, notify subject help.
         upgrade_plugin_savepoint(true, 2026111313, 'tool', 'murules');
     }
+    if ($oldversion < 2026111314) {
+        // Overview settings link + matching-estimate note on Review.
+        upgrade_plugin_savepoint(true, 2026111314, 'tool', 'murules');
+    }
     return true;
 }

@@ -31,6 +31,13 @@
     margin-bottom: 1rem;
 }
 
+.tool_murules-toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .tool_murules-filters {
     display: flex;
     flex-wrap: wrap;
@@ -237,6 +244,12 @@
     background: #f3f6f8;
     border-left: 3px solid #0f5c63;
     color: #1c2430;
+}
+
+.tool_murules-match-estimate-note {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    max-width: 36rem;
 }
 
 .tool_murules-empty {

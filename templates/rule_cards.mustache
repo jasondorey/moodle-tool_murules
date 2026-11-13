@@ -19,7 +19,10 @@
                 </a>
             {{/filters}}
         </nav>
-        <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
+        <div class="tool_murules-toolbar-actions">
+            <a class="btn btn-link btn-sm" href="{{settingsurl}}">{{#str}} settings, tool_murules {{/str}}</a>
+            <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
+        </div>
     </div>
     {{^hasrules}}
         <div class="tool_murules-empty">

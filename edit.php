@@ -183,9 +183,14 @@ $estimate = \tool_murules\local\engine::estimate_matching_users(
     $draft['conditionconfig'] ?? [],
     500
 );
-$estimatehtml = html_writer::span(
-    \tool_murules\local\engine::format_matching_estimate($estimate),
-    'tool_murules-match-estimate'
+$estimatehtml = html_writer::div(
+    html_writer::span(
+        \tool_murules\local\engine::format_matching_estimate($estimate),
+        'tool_murules-match-estimate'
+    ) .
+    html_writer::tag('div', get_string('matchingusers_estimate_note', 'tool_murules'), [
+        'class' => 'tool_murules-match-estimate-note text-muted',
+    ])
 );
 $form = new \tool_murules\form\rule_review(null, [
     'name' => $draft['name'] ?? '',

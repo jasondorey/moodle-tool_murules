@@ -82,6 +82,7 @@ $string['matchingusers_estimate'] = '{$a->count} users currently match';
 $string['matchingusers_estimate_capped'] = 'At least {$a->count} users currently match (estimate capped at {$a->limit})';
 $string['matchingusers_estimate_none'] = 'No users currently match';
 $string['matchingusers_estimate_broken'] = 'Cannot estimate — condition references missing data';
+$string['matchingusers_estimate_note'] = 'Estimate uses the condition only (before save). Suspended-user inclusion is applied when the rule runs.';
 $string['loadingcms'] = 'Loading activities…';
 $string['nocms'] = 'No matching activities in this course';
 
