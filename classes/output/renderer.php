@@ -181,4 +181,20 @@ class renderer extends plugin_renderer_base {
         $html .= html_writer::end_div();
         return $html;
     }
+
+    /**
+     * Soft exit link back to the rules overview (discards are via Cancel).
+     *
+     * @return string
+     */
+    public function wizard_exit_nav(): string {
+        return html_writer::div(
+            html_writer::link(
+                new \moodle_url('/admin/tool/murules/index.php'),
+                get_string('backtorules', 'tool_murules'),
+                ['class' => 'btn btn-link btn-sm px-0']
+            ),
+            'tool_murules-wizard-exit mb-2'
+        );
+    }
 }

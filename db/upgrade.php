@@ -78,5 +78,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Delete confirm copy + Event WHEN preview when editing saved config.
         upgrade_plugin_savepoint(true, 2026111312, 'tool', 'murules');
     }
+    if ($oldversion < 2026111313) {
+        // Wizard back-to-rules link, Actions WHEN context, notify subject help.
+        upgrade_plugin_savepoint(true, 2026111313, 'tool', 'murules');
+    }
     return true;
 }

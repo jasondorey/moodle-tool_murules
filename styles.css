@@ -187,6 +187,14 @@
     gap: 0.5rem;
 }
 
+.tool_murules-wizard-exit {
+    color: #5a6675;
+}
+
+.tool_murules-wizard-context .tool_murules-label {
+    margin-bottom: 0.35rem;
+}
+
 .tool_murules-wizard-steps {
     margin-bottom: 1.25rem;
 }

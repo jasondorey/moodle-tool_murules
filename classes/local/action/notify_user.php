@@ -46,6 +46,7 @@ class notify_user extends base {
         $mform->setType('nu_subject', PARAM_TEXT);
         $mform->setDefault('nu_subject', $config['subject'] ?? '');
         $mform->addRule('nu_subject', get_string('error_notify_subject', 'tool_murules'), 'required', null, 'client');
+        $mform->addHelpButton('nu_subject', 'notify_subject', 'tool_murules');
 
         $mform->addElement('textarea', 'nu_body', get_string('notify_body', 'tool_murules'), 'rows="6" cols="60"');
         $mform->setType('nu_body', PARAM_RAW);

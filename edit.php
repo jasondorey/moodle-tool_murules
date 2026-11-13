@@ -114,6 +114,7 @@ if ($step === 'event') {
     }
     $PAGE->requires->js_call_amd('tool_murules/wizard_event', 'init');
     echo $OUTPUT->header();
+    echo $renderer->wizard_exit_nav();
     echo $renderer->wizard_steps('event');
     echo $OUTPUT->heading(get_string('wizard_event', 'tool_murules'), 3);
     echo html_writer::tag('p', get_string('wizard_event_help', 'tool_murules'), ['class' => 'text-muted']);
@@ -150,9 +151,21 @@ if ($step === 'actions') {
     }
     $PAGE->requires->js_call_amd('tool_murules/wizard_actions', 'init');
     echo $OUTPUT->header();
+    echo $renderer->wizard_exit_nav();
     echo $renderer->wizard_steps('actions');
     echo $OUTPUT->heading(get_string('wizard_actions', 'tool_murules'), 3);
     echo html_writer::tag('p', get_string('wizard_actions_help', 'tool_murules'), ['class' => 'text-muted']);
+    if (!empty($draft['conditiontype'])) {
+        $cond = \tool_murules\local\registry::get_condition($draft['conditiontype']);
+        if ($cond) {
+            $whensummary = $cond->get_description($draft['conditionconfig'] ?? []);
+            echo html_writer::div(
+                html_writer::span(get_string('when', 'tool_murules'), 'tool_murules-label') .
+                html_writer::div(s($whensummary), 'tool_murules-recap tool_murules-recap-when'),
+                'tool_murules-wizard-context mb-3'
+            );
+        }
+    }
     $form->display();
     echo $OUTPUT->footer();
     exit;
@@ -217,6 +230,7 @@ if ($data = $form->get_data()) {
 }
 
 echo $OUTPUT->header();
+echo $renderer->wizard_exit_nav();
 echo $renderer->wizard_steps('review');
 echo $OUTPUT->heading(get_string('wizard_review', 'tool_murules'), 3);
 echo html_writer::tag('p', get_string('wizard_review_help', 'tool_murules'), ['class' => 'text-muted']);

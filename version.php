@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111312;
+$plugin->version   = 2026111313;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.3.10-whenPreview';
+$plugin->release   = '0.3.11-wizardNav';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,
