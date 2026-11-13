@@ -220,6 +220,21 @@ class renderer extends plugin_renderer_base {
             $html .= html_writer::tag('li', $label, $attrs);
         }
         $html .= html_writer::end_tag('ol');
+        $stepnum = ($currentidx === false) ? 1 : ($currentidx + 1);
+        $steplabel = get_string('wizard_' . $current, 'tool_murules');
+        if ($stepnum >= count($steps)) {
+            $progress = get_string('wizard_progress_last', 'tool_murules', $steplabel);
+        } else {
+            $progress = get_string('wizard_progress', 'tool_murules', (object)[
+                'current' => $stepnum,
+                'total' => count($steps),
+                'label' => $steplabel,
+            ]);
+        }
+        $html .= html_writer::tag('p', $progress, [
+            'class' => 'tool_murules-wizard-progress text-muted',
+            'aria-live' => 'polite',
+        ]);
         $html .= html_writer::end_tag('nav');
         return $html;
     }

@@ -126,5 +126,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Card "Not applied yet" + named aria-labels on actions.
         upgrade_plugin_savepoint(true, 2026111324, 'tool', 'murules');
     }
+    if ($oldversion < 2026111325) {
+        // Wizard "Step N of 3" / Last step progress line.
+        upgrade_plugin_savepoint(true, 2026111325, 'tool', 'murules');
+    }
     return true;
 }
