@@ -109,6 +109,7 @@ $string['deleteduser'] = 'deleted account';
 $string['saveandcontinue'] = 'Save and continue';
 $string['save'] = 'Save rule';
 $string['back'] = 'Back';
+$string['cancelwizard'] = 'Cancel';
 
 $string['settings'] = 'Rules settings';
 $string['settings_desc'] = 'Global controls for local automation rules.';
