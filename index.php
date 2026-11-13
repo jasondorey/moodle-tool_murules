@@ -48,14 +48,27 @@ if ($action && $id) {
     require_sesskey();
     $rulerec = \tool_murules\local\rule::get($id);
     if ($action === 'toggle') {
-        \tool_murules\local\rule::set_enabled($id, !(int)$rulerec->enabled);
-        redirect(new moodle_url('/admin/tool/murules/index.php', $returnparams));
+        $enablenow = !(int)$rulerec->enabled;
+        \tool_murules\local\rule::set_enabled($id, $enablenow);
+        $noticestr = $enablenow ? 'ruleenabled_notice' : 'ruledisabled_notice';
+        redirect(
+            new moodle_url('/admin/tool/murules/index.php', $returnparams),
+            get_string($noticestr, 'tool_murules', format_string($rulerec->name)),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
     }
     if ($action === 'delete') {
         $confirm = optional_param('confirm', 0, PARAM_BOOL);
         if ($confirm) {
+            $deletedname = format_string($rulerec->name);
             \tool_murules\local\rule::delete($id);
-            redirect(new moodle_url('/admin/tool/murules/index.php', $returnparams));
+            redirect(
+                new moodle_url('/admin/tool/murules/index.php', $returnparams),
+                get_string('ruledeleted_notice', 'tool_murules', $deletedname),
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
         }
         $condition = \tool_murules\local\registry::get_condition($rulerec->conditiontype);
         $config = \tool_murules\local\rule::condition_config($rulerec);

@@ -134,5 +134,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Delete confirm shows WHEN/THEN recap.
         upgrade_plugin_savepoint(true, 2026111326, 'tool', 'murules');
     }
+    if ($oldversion < 2026111327) {
+        // Enable/disable/delete success notices on overview redirect.
+        upgrade_plugin_savepoint(true, 2026111327, 'tool', 'murules');
+    }
     return true;
 }
