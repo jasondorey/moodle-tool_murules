@@ -80,13 +80,15 @@ foreach ($records as $rec) {
         ? fullname($user) . ' (' . s($user->email) . ')'
         : (string)$rec->userid;
     $statuskey = 'status_' . $rec->status;
-    $status = get_string_manager()->string_exists($statuskey, 'tool_murules')
+    $statuslabel = get_string_manager()->string_exists($statuskey, 'tool_murules')
         ? get_string($statuskey, 'tool_murules')
         : $rec->status;
+    $statusclass = 'tool_murules-status tool_murules-status-' . preg_replace('/[^a-z]/', '', strtolower((string)$rec->status));
+    $statushtml = html_writer::span(s($statuslabel), $statusclass);
     $table->data[] = [
         userdate($rec->timecreated),
         $userlink,
-        $status,
+        $statushtml,
         format_text((string)$rec->reason, FORMAT_PLAIN),
         $rec->muprogallocationid ? (string)$rec->muprogallocationid : '—',
     ];

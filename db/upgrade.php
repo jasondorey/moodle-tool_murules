@@ -50,5 +50,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // UX marathon: empty states, wizard step a11y, save notice, CM redisplay options.
         upgrade_plugin_savepoint(true, 2026111305, 'tool', 'murules');
     }
+    if ($oldversion < 2026111306) {
+        // Log status pills styling.
+        upgrade_plugin_savepoint(true, 2026111306, 'tool', 'murules');
+    }
     return true;
 }

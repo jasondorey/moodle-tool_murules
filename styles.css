@@ -200,3 +200,26 @@
 .tool_murules-log-nav {
     color: #5a6675;
 }
+
+.tool_murules-status {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--murules-line, #d5dbe3);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+}
+
+.tool_murules-status-applied {
+    border-color: #1f7a4d;
+    color: #1f7a4d;
+}
+
+.tool_murules-status-skipped {
+    border-color: #8a6d3b;
+    color: #8a6d3b;
+}
+
+.tool_murules-status-failed {
+    border-color: #a33b2b;
+    color: #a33b2b;
+}
