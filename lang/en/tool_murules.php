@@ -86,6 +86,7 @@ $string['filter_empty_title'] = 'Nothing matches this view';
 $string['filter_empty'] = 'No rules match the current filter or search. Switch filters, clear the search, or create a new rule.';
 $string['searchrules'] = 'Search rules';
 $string['searchrules_placeholder'] = 'Search by rule name';
+$string['searchrules_hint'] = 'Filters the rule list by name. Combines with the status filter above.';
 $string['clearsearch'] = 'Clear search';
 $string['searchquery_label'] = '“{$a}”';
 $string['overview_showing'] = 'Showing: {$a}';

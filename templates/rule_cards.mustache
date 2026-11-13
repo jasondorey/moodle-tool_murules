@@ -38,11 +38,13 @@
             {{/filtervalue}}
             <label class="visually-hidden" for="tool_murules_search_q">{{#str}} searchrules, tool_murules {{/str}}</label>
             <input id="tool_murules_search_q" class="form-control" type="search" name="q" value="{{query}}"
-                   placeholder="{{#str}} searchrules_placeholder, tool_murules {{/str}}" autocomplete="off">
+                   placeholder="{{#str}} searchrules_placeholder, tool_murules {{/str}}" autocomplete="off"
+                   {{#hasquery}}autofocus{{/hasquery}} aria-describedby="tool_murules_search_hint">
             <button class="btn btn-secondary" type="submit">{{#str}} search {{/str}}</button>
             {{#hasquery}}
                 <a class="btn btn-link btn-sm" href="{{clearurl}}">{{#str}} clearsearch, tool_murules {{/str}}</a>
             {{/hasquery}}
+            <span id="tool_murules_search_hint" class="visually-hidden">{{#str}} searchrules_hint, tool_murules {{/str}}</span>
         </form>
     {{/hasrules}}
     {{^hasrules}}

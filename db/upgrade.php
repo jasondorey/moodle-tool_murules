@@ -146,5 +146,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Disabled badge fill + card/actions labelledby a11y.
         upgrade_plugin_savepoint(true, 2026111329, 'tool', 'murules');
     }
+    if ($oldversion < 2026111330) {
+        // Search autofocus when query present + hint for screen readers.
+        upgrade_plugin_savepoint(true, 2026111330, 'tool', 'murules');
+    }
     return true;
 }
