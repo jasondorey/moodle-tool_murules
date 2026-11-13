@@ -138,5 +138,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Enable/disable/delete success notices on overview redirect.
         upgrade_plugin_savepoint(true, 2026111327, 'tool', 'murules');
     }
+    if ($oldversion < 2026111328) {
+        // Stronger contrast for log status + card enabled/broken badges.
+        upgrade_plugin_savepoint(true, 2026111328, 'tool', 'murules');
+    }
     return true;
 }

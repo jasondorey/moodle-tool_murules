@@ -144,13 +144,15 @@
 }
 
 .tool_murules-badge.is-enabled {
-    border-color: #1f7a4d;
-    color: #1f7a4d;
+    border-color: #1a6a42;
+    color: #145536;
+    background: #e7f5ee;
 }
 
 .tool_murules-badge.is-broken {
-    border-color: #a33b2b;
-    color: #a33b2b;
+    border-color: #8f3224;
+    color: #7a2a1f;
+    background: #fbeceb;
 }
 
 .tool_murules-badges {
@@ -337,25 +339,29 @@
 
 .tool_murules-status {
     display: inline-block;
-    padding: 0.1rem 0.45rem;
+    padding: 0.15rem 0.5rem;
     border: 1px solid var(--murules-line, #d5dbe3);
     font-size: 0.8rem;
+    font-weight: 600;
     letter-spacing: 0.02em;
 }
 
 .tool_murules-status-applied {
-    border-color: #1f7a4d;
-    color: #1f7a4d;
+    border-color: #1a6a42;
+    color: #145536;
+    background: #e7f5ee;
 }
 
 .tool_murules-status-skipped {
-    border-color: #8a6d3b;
-    color: #8a6d3b;
+    border-color: #7a5f32;
+    color: #5c4724;
+    background: #f7f1e4;
 }
 
 .tool_murules-status-failed {
-    border-color: #a33b2b;
-    color: #a33b2b;
+    border-color: #8f3224;
+    color: #7a2a1f;
+    background: #fbeceb;
 }
 
 .tool_murules-recap {
