@@ -1,0 +1,14 @@
+{{!
+    @template tool_murules/primary_tabs
+
+    Overview | Rules | Logs tertiary navigation.
+}}
+<ul class="nav nav-tabs mb-3" role="tablist">
+    {{#tabs}}
+        <li class="nav-item" role="presentation">
+            <a class="nav-link{{#selected}} active{{/selected}}" href="{{url}}" {{#selected}}aria-current="page"{{/selected}}>
+                {{label}}
+            </a>
+        </li>
+    {{/tabs}}
+</ul>

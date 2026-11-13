@@ -17,7 +17,10 @@
 namespace tool_murules\output;
 
 use html_writer;
+use moodle_url;
 use plugin_renderer_base;
+use tool_murules\local\dashboard;
+use tool_murules\local\engine;
 use tool_murules\local\registry;
 use tool_murules\local\rule;
 
@@ -103,7 +106,7 @@ class renderer extends plugin_renderer_base {
                     : get_string('neverapplied', 'tool_murules'),
                 'editurl' => (new \moodle_url('/admin/tool/murules/edit.php', ['id' => $rec->id]))->out(false),
                 'editlabel' => get_string('editrule_action', 'tool_murules', format_string($rec->name)),
-                'toggleurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
+                'toggleurl' => (new moodle_url('/admin/tool/murules/rules.php', array_merge($filterparams, [
                     'action' => 'toggle',
                     'id' => $rec->id,
                     'sesskey' => sesskey(),
@@ -111,9 +114,9 @@ class renderer extends plugin_renderer_base {
                 'togglelabel' => $enabled
                     ? get_string('togglerule_disable', 'tool_murules', format_string($rec->name))
                     : get_string('togglerule_enable', 'tool_murules', format_string($rec->name)),
-                'logurl' => (new \moodle_url('/admin/tool/murules/log.php', ['id' => $rec->id]))->out(false),
+                'logurl' => (new moodle_url('/admin/tool/murules/log.php', ['id' => $rec->id]))->out(false),
                 'loglabel' => get_string('viewlog_action', 'tool_murules', format_string($rec->name)),
-                'deleteurl' => (new \moodle_url('/admin/tool/murules/index.php', array_merge($filterparams, [
+                'deleteurl' => (new moodle_url('/admin/tool/murules/rules.php', array_merge($filterparams, [
                     'action' => 'delete',
                     'id' => $rec->id,
                     'sesskey' => sesskey(),
@@ -160,13 +163,13 @@ class renderer extends plugin_renderer_base {
                 'key' => $key,
                 'label' => get_string('filter_' . $key, 'tool_murules'),
                 'count' => $counts[$key],
-                'url' => (new \moodle_url('/admin/tool/murules/index.php', $params))->out(false),
+                'url' => (new moodle_url('/admin/tool/murules/rules.php', $params))->out(false),
                 'selected' => $key === $filter,
             ];
         }
 
-        $settingsurl = (new \moodle_url('/admin/settings.php', ['section' => 'tool_murules_settings']))->out(false);
-        $searchaction = (new \moodle_url('/admin/tool/murules/index.php'))->out(false);
+        $settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'tool_murules_settings']))->out(false);
+        $searchaction = (new moodle_url('/admin/tool/murules/rules.php'))->out(false);
 
         $shown = count($rules);
         $total = count($all);
@@ -186,7 +189,7 @@ class renderer extends plugin_renderer_base {
             'query' => s($query),
             'hasquery' => $query !== '',
             'filtervalue' => $filter !== 'all' ? $filter : '',
-            'clearurl' => (new \moodle_url('/admin/tool/murules/index.php', $filter !== 'all' ? ['filter' => $filter] : []))->out(false),
+            'clearurl' => (new moodle_url('/admin/tool/murules/rules.php', $filter !== 'all' ? ['filter' => $filter] : []))->out(false),
             'hasresultcount' => $shown > 0,
             'resultcount' => get_string('overview_resultcount', 'tool_murules', (object)[
                 'shown' => $shown,
@@ -270,18 +273,171 @@ class renderer extends plugin_renderer_base {
     }
 
     /**
-     * Soft exit link back to the rules overview (discards are via Cancel).
+     * Soft exit link back to the rules list (discards are via Cancel).
      *
      * @return string
      */
     public function wizard_exit_nav(): string {
         return html_writer::div(
             html_writer::link(
-                new \moodle_url('/admin/tool/murules/index.php'),
+                new moodle_url('/admin/tool/murules/rules.php'),
                 get_string('backtorules', 'tool_murules'),
                 ['class' => 'btn btn-link btn-sm px-0']
             ),
             'tool_murules-wizard-exit mb-2'
         );
+    }
+
+    /**
+     * Primary tabs: Overview | Rules | Logs.
+     *
+     * @param string $current overview|rules|logs
+     * @return string
+     */
+    public function primary_tabs(string $current): string {
+        $tabs = [
+            [
+                'key' => 'overview',
+                'label' => get_string('tab_overview', 'tool_murules'),
+                'url' => (new moodle_url('/admin/tool/murules/index.php'))->out(false),
+                'selected' => $current === 'overview',
+            ],
+            [
+                'key' => 'rules',
+                'label' => get_string('tab_rules', 'tool_murules'),
+                'url' => (new moodle_url('/admin/tool/murules/rules.php'))->out(false),
+                'selected' => $current === 'rules',
+            ],
+            [
+                'key' => 'logs',
+                'label' => get_string('tab_logs', 'tool_murules'),
+                'url' => (new moodle_url('/admin/tool/murules/matches.php'))->out(false),
+                'selected' => $current === 'logs',
+            ],
+        ];
+        return $this->render_from_template('tool_murules/primary_tabs', ['tabs' => $tabs]);
+    }
+
+    /**
+     * Local overview dashboard (metrics, 7-day chart, recent activity).
+     *
+     * @return string
+     */
+    public function dashboard(): string {
+        global $DB, $OUTPUT;
+
+        $rulecounts = dashboard::rule_counts();
+        $weeksince = usergetmidnight(time()) - (6 * DAYSECS);
+        $weektotals = dashboard::match_totals_since($weeksince);
+        $alltotals = dashboard::match_totals();
+        $series = dashboard::daily_series(7);
+        $seriesum = array_sum($series['applied']) + array_sum($series['skipped']) + array_sum($series['failed']);
+
+        $charthtml = '';
+        if ($seriesum > 0) {
+            $chart = new \core\chart_bar();
+            $chart->set_stacked(true);
+            $chart->set_title(get_string('dashboard_chart_title', 'tool_murules'));
+            $chart->add_series(new \core\chart_series(
+                get_string('log_filter_applied', 'tool_murules'),
+                $series['applied']
+            ));
+            $chart->add_series(new \core\chart_series(
+                get_string('log_filter_skipped', 'tool_murules'),
+                $series['skipped']
+            ));
+            $chart->add_series(new \core\chart_series(
+                get_string('log_filter_failed', 'tool_murules'),
+                $series['failed']
+            ));
+            $chart->set_labels($series['labels']);
+            $charthtml = $OUTPUT->render($chart);
+        }
+
+        $recentrows = dashboard::recent_matches(15);
+        $recent = [];
+        foreach ($recentrows as $rec) {
+            $user = $DB->get_record('user', ['id' => $rec->userid], '*', IGNORE_MISSING);
+            if ($user && !(int)$user->deleted) {
+                $userhtml = html_writer::link(
+                    new moodle_url('/user/profile.php', ['id' => $user->id]),
+                    fullname($user)
+                );
+            } else if ($user) {
+                $userhtml = fullname($user) . ' (' . get_string('deleteduser', 'tool_murules') . ')';
+            } else {
+                $userhtml = (string)$rec->userid;
+            }
+            $statuskey = 'status_' . $rec->status;
+            $statuslabel = get_string_manager()->string_exists($statuskey, 'tool_murules')
+                ? get_string($statuskey, 'tool_murules')
+                : $rec->status;
+            $statusbadge = match ((string)$rec->status) {
+                'applied' => 'text-bg-success',
+                'skipped' => 'text-bg-warning',
+                'failed' => 'text-bg-danger',
+                default => 'text-bg-secondary',
+            };
+            $recent[] = [
+                'timelabel' => userdate((int)$rec->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
+                'rulename' => format_string($rec->rulename),
+                'rulelogurl' => (new moodle_url('/admin/tool/murules/log.php', ['id' => $rec->ruleid]))->out(false),
+                'userhtml' => $userhtml,
+                'statuslabel' => $statuslabel,
+                'statusbadge' => $statusbadge,
+                'reason' => format_string((string)$rec->reason),
+            ];
+        }
+
+        return $this->render_from_template('tool_murules/dashboard', [
+            'killswitch' => engine::is_killed(),
+            'observersoff' => !engine::is_killed() && !engine::observers_enabled(),
+            'settingsurl' => (new moodle_url('/admin/settings.php', ['section' => 'tool_murules_settings']))->out(false),
+            'createurl' => (new moodle_url('/admin/tool/murules/edit.php'))->out(false),
+            'logsurl' => (new moodle_url('/admin/tool/murules/matches.php'))->out(false),
+            'metrics' => [
+                [
+                    'label' => get_string('dashboard_metric_rules', 'tool_murules'),
+                    'value' => $rulecounts['all'],
+                    'hint' => get_string('filter_disabled', 'tool_murules') . ': ' . $rulecounts['disabled'],
+                ],
+                [
+                    'label' => get_string('dashboard_metric_enabled', 'tool_murules'),
+                    'value' => $rulecounts['enabled'],
+                    'hint' => '',
+                ],
+                [
+                    'label' => get_string('dashboard_metric_broken', 'tool_murules'),
+                    'value' => $rulecounts['broken'],
+                    'hint' => '',
+                ],
+                [
+                    'label' => get_string('dashboard_metric_week', 'tool_murules'),
+                    'value' => $weektotals['all'],
+                    'hint' => get_string('dashboard_metric_week_hint', 'tool_murules', (object)$weektotals),
+                ],
+            ],
+            'haschartdata' => $seriesum > 0,
+            'charthtml' => $charthtml,
+            'statustotals' => [
+                [
+                    'label' => get_string('log_filter_applied', 'tool_murules'),
+                    'value' => $alltotals['applied'],
+                    'badgeclass' => 'text-bg-success',
+                ],
+                [
+                    'label' => get_string('log_filter_skipped', 'tool_murules'),
+                    'value' => $alltotals['skipped'],
+                    'badgeclass' => 'text-bg-warning',
+                ],
+                [
+                    'label' => get_string('log_filter_failed', 'tool_murules'),
+                    'value' => $alltotals['failed'],
+                    'badgeclass' => 'text-bg-danger',
+                ],
+            ],
+            'hasrecent' => !empty($recent),
+            'recent' => $recent,
+        ]);
     }
 }

@@ -166,5 +166,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Prefer Bootstrap / Moodle Design System components over custom chrome.
         upgrade_plugin_savepoint(true, 2026111334, 'tool', 'murules');
     }
+    if ($oldversion < 2026111335) {
+        // Local Overview dashboard + Rules/Logs tabs.
+        upgrade_plugin_savepoint(true, 2026111335, 'tool', 'murules');
+    }
     return true;
 }

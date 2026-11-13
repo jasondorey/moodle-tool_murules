@@ -1,0 +1,114 @@
+{{!
+    @template tool_murules/dashboard
+
+    Local Rules overview metrics (no cloud destinations / sync).
+}}
+<div class="tool_murules-dashboard">
+    {{#killswitch}}
+        <div class="alert alert-warning" role="alert">
+            <strong>{{#str}} killswitch_banner_title, tool_murules {{/str}}</strong>
+            {{#str}} killswitch_banner, tool_murules {{/str}}
+            <a class="alert-link" href="{{settingsurl}}">{{#str}} killswitch_banner_link, tool_murules {{/str}}</a>
+        </div>
+    {{/killswitch}}
+    {{#observersoff}}
+        <div class="alert alert-info" role="alert">
+            <strong>{{#str}} observersoff_banner_title, tool_murules {{/str}}</strong>
+            {{#str}} observersoff_banner, tool_murules {{/str}}
+            <a class="alert-link" href="{{settingsurl}}">{{#str}} killswitch_banner_link, tool_murules {{/str}}</a>
+        </div>
+    {{/observersoff}}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <p class="text-muted mb-0">{{#str}} dashboard_intro, tool_murules {{/str}}</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-link btn-sm" href="{{settingsurl}}">{{#str}} settings, tool_murules {{/str}}</a>
+            <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        {{#metrics}}
+            <div class="col-6 col-md-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">{{label}}</div>
+                        <div class="fs-3 fw-semibold">{{value}}</div>
+                        {{#hint}}
+                            <div class="small text-muted">{{hint}}</div>
+                        {{/hint}}
+                    </div>
+                </div>
+            </div>
+        {{/metrics}}
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">{{#str}} dashboard_chart_title, tool_murules {{/str}}</h2>
+                    {{#haschartdata}}
+                        {{{charthtml}}}
+                    {{/haschartdata}}
+                    {{^haschartdata}}
+                        <p class="text-muted mb-0">{{#str}} dashboard_chart_empty, tool_murules {{/str}}</p>
+                    {{/haschartdata}}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">{{#str}} dashboard_status_mix, tool_murules {{/str}}</h2>
+                    <ul class="list-unstyled mb-0">
+                        {{#statustotals}}
+                            <li class="d-flex justify-content-between border-bottom py-2">
+                                <span>{{label}}</span>
+                                <span class="badge {{badgeclass}}">{{value}}</span>
+                            </li>
+                        {{/statustotals}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <h2 class="h5 card-title mb-0">{{#str}} dashboard_recent, tool_murules {{/str}}</h2>
+                <a class="btn btn-link btn-sm" href="{{logsurl}}">{{#str}} dashboard_view_logs, tool_murules {{/str}}</a>
+            </div>
+            {{#hasrecent}}
+                <div class="table-responsive">
+                    <table class="table table-sm generaltable mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">{{#str}} time, tool_murules {{/str}}</th>
+                                <th scope="col">{{#str}} rule, tool_murules {{/str}}</th>
+                                <th scope="col">{{#str}} user, tool_murules {{/str}}</th>
+                                <th scope="col">{{#str}} status, tool_murules {{/str}}</th>
+                                <th scope="col">{{#str}} reason, tool_murules {{/str}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#recent}}
+                                <tr>
+                                    <td>{{timelabel}}</td>
+                                    <td><a href="{{rulelogurl}}">{{rulename}}</a></td>
+                                    <td>{{{userhtml}}}</td>
+                                    <td><span class="badge {{statusbadge}}">{{statuslabel}}</span></td>
+                                    <td>{{reason}}</td>
+                                </tr>
+                            {{/recent}}
+                        </tbody>
+                    </table>
+                </div>
+            {{/hasrecent}}
+            {{^hasrecent}}
+                <p class="text-muted mb-0">{{#str}} dashboard_recent_empty, tool_murules {{/str}}</p>
+            {{/hasrecent}}
+        </div>
+    </div>
+</div>

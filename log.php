@@ -91,7 +91,7 @@ if ($download === 'csv') {
 
 echo $OUTPUT->header();
 echo html_writer::div(
-    html_writer::link(new moodle_url('/admin/tool/murules/index.php'), get_string('backtorules', 'tool_murules'), [
+    html_writer::link(new moodle_url('/admin/tool/murules/rules.php'), get_string('backtorules', 'tool_murules'), [
         'class' => 'btn btn-link btn-sm px-0',
     ]) .
     ' · ' .

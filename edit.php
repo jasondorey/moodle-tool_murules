@@ -99,7 +99,7 @@ if ($step === 'event') {
     ]);
     if ($form->is_cancelled()) {
         unset($SESSION->$sesskeyname);
-        redirect(new moodle_url('/admin/tool/murules/index.php'));
+        redirect(new moodle_url('/admin/tool/murules/rules.php'));
     }
     if ($data = $form->get_data()) {
         $condition = \tool_murules\local\registry::get_condition($data->conditiontype);
@@ -227,7 +227,7 @@ if ($data = $form->get_data()) {
     \tool_murules\local\rule::save($save);
     unset($SESSION->$sesskeyname);
     redirect(
-        new moodle_url('/admin/tool/murules/index.php'),
+        new moodle_url('/admin/tool/murules/rules.php'),
         get_string('rulesaved', 'tool_murules', format_string($data->name)),
         null,
         \core\output\notification::NOTIFY_SUCCESS
