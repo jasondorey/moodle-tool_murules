@@ -17,6 +17,11 @@
     padding: 1.25rem;
 }
 
+.tool_murules-lead {
+    max-width: 46rem;
+    margin: 0 0 0.85rem;
+}
+
 .tool_murules-toolbar {
     display: flex;
     flex-wrap: wrap;

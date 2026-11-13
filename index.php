@@ -75,5 +75,6 @@ $PAGE->set_heading(get_string('rulesoverview', 'tool_murules'));
 $renderer = $PAGE->get_renderer('tool_murules');
 
 echo $OUTPUT->header();
+echo html_writer::tag('p', get_string('rulesoverview_help', 'tool_murules'), ['class' => 'tool_murules-lead text-muted']);
 echo $renderer->rule_cards($filter);
 echo $OUTPUT->footer();

@@ -43,6 +43,7 @@ class rule_review extends \moodleform {
 
         $mform->addElement('advcheckbox', 'enabled', get_string('enabled', 'tool_murules'));
         $mform->setDefault('enabled', $custom['enabled'] ?? 1);
+        $mform->addHelpButton('enabled', 'enabled', 'tool_murules');
 
         $limits = [
             'once' => get_string('actionlimit_once', 'tool_murules'),
@@ -50,9 +51,11 @@ class rule_review extends \moodleform {
         ];
         $mform->addElement('select', 'actionlimit', get_string('actionlimit', 'tool_murules'), $limits);
         $mform->setDefault('actionlimit', $custom['actionlimit'] ?? 'once');
+        $mform->addHelpButton('actionlimit', 'actionlimit', 'tool_murules');
 
         $mform->addElement('advcheckbox', 'includesuspended', get_string('includesuspended', 'tool_murules'));
         $mform->setDefault('includesuspended', $custom['includesuspended'] ?? 0);
+        $mform->addHelpButton('includesuspended', 'includesuspended', 'tool_murules');
 
         $mform->addElement('header', 'hdr_recap', get_string('wizard_review_recap', 'tool_murules'));
         $mform->setExpanded('hdr_recap', true);

@@ -140,10 +140,18 @@ $table->head = [
 ];
 $table->data = [];
 foreach ($records as $rec) {
-    $user = $DB->get_record('user', ['id' => $rec->userid], 'id, firstname, lastname, email, deleted');
-    $userlink = $user
-        ? fullname($user) . ' (' . s($user->email) . ')'
-        : (string)$rec->userid;
+    $user = $DB->get_record('user', ['id' => $rec->userid], '*', IGNORE_MISSING);
+    if ($user && !(int)$user->deleted) {
+        $userlink = html_writer::link(
+            new moodle_url('/user/profile.php', ['id' => $user->id]),
+            fullname($user),
+            ['title' => $user->email]
+        ) . ' (' . s($user->email) . ')';
+    } else if ($user) {
+        $userlink = fullname($user) . ' (' . get_string('deleteduser', 'tool_murules') . ')';
+    } else {
+        $userlink = (string)$rec->userid;
+    }
     $statuskey = 'status_' . $rec->status;
     $statuslabel = get_string_manager()->string_exists($statuskey, 'tool_murules')
         ? get_string($statuskey, 'tool_murules')

@@ -62,5 +62,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Kill-switch overview banner + log status filters.
         upgrade_plugin_savepoint(true, 2026111308, 'tool', 'murules');
     }
+    if ($oldversion < 2026111309) {
+        // Review help buttons, overview lead copy, log profile links.
+        upgrade_plugin_savepoint(true, 2026111309, 'tool', 'murules');
+    }
     return true;
 }
