@@ -30,6 +30,7 @@ require_capability('tool/murules:manage', context_system::instance());
 
 $id = optional_param('id', 0, PARAM_INT);
 $step = optional_param('step', 'event', PARAM_ALPHA);
+$pick = optional_param('pick', '', PARAM_ALPHANUMEXT);
 $sesskeyname = 'tool_murules_wizard';
 
 $draft = [];
@@ -58,6 +59,28 @@ if ($id) {
     $draft['id'] = $id;
 }
 
+// Type picker reload (single-panel Event/Actions forms).
+if ($step === 'event' && $pick !== '') {
+    $picked = \tool_murules\local\registry::get_condition($pick);
+    if ($picked && $picked->is_available()) {
+        if (($draft['conditiontype'] ?? '') !== $pick) {
+            $draft['conditiontype'] = $pick;
+            $draft['conditionconfig'] = [];
+            $SESSION->$sesskeyname = $draft;
+        }
+    }
+}
+if ($step === 'actions' && $pick !== '') {
+    $picked = \tool_murules\local\registry::get_action($pick);
+    if ($picked && $picked->is_available()) {
+        if (($draft['actiontype'] ?? '') !== $pick) {
+            $draft['actiontype'] = $pick;
+            $draft['actionconfig'] = [];
+            $SESSION->$sesskeyname = $draft;
+        }
+    }
+}
+
 $PAGE->set_url(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => $step]));
 $PAGE->set_title($id ? get_string('editrule', 'tool_murules') : get_string('createrule', 'tool_murules'));
 $PAGE->set_heading($PAGE->title);
@@ -70,7 +93,10 @@ if ($step === 'event') {
         'conditiontype' => $draft['conditiontype'] ?? '',
         'conditionconfig' => $draft['conditionconfig'] ?? [],
     ]);
-    $form->set_data(['id' => $id, 'conditiontype' => $draft['conditiontype'] ?? '']);
+    $form->set_data([
+        'id' => $id,
+        'conditiontype' => $draft['conditiontype'] ?? '',
+    ]);
     if ($form->is_cancelled()) {
         unset($SESSION->$sesskeyname);
         redirect(new moodle_url('/admin/tool/murules/index.php'));
@@ -104,7 +130,10 @@ if ($step === 'actions') {
         'actiontype' => $draft['actiontype'] ?? 'allocate_muprog',
         'actionconfig' => $draft['actionconfig'] ?? [],
     ]);
-    $form->set_data(['id' => $id, 'actiontype' => $draft['actiontype'] ?? 'allocate_muprog']);
+    $form->set_data([
+        'id' => $id,
+        'actiontype' => $draft['actiontype'] ?? 'allocate_muprog',
+    ]);
     if ($form->is_cancelled()) {
         redirect(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id, 'step' => 'event']));
     }
@@ -119,6 +148,7 @@ if ($step === 'actions') {
             'step' => 'review',
         ]));
     }
+    $PAGE->requires->js_call_amd('tool_murules/wizard_actions', 'init');
     echo $OUTPUT->header();
     echo $renderer->wizard_steps('actions');
     echo $OUTPUT->heading(get_string('wizard_actions', 'tool_murules'), 3);
@@ -178,7 +208,12 @@ if ($data = $form->get_data()) {
     ];
     \tool_murules\local\rule::save($save);
     unset($SESSION->$sesskeyname);
-    redirect(new moodle_url('/admin/tool/murules/index.php'));
+    redirect(
+        new moodle_url('/admin/tool/murules/index.php'),
+        get_string('rulesaved', 'tool_murules', format_string($data->name)),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();

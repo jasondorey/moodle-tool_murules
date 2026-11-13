@@ -8,12 +8,18 @@
         <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
     </div>
     {{^hasrules}}
-        <p class="text-muted">{{#str}} norules, tool_murules {{/str}}</p>
+        <div class="tool_murules-empty">
+            <h3 class="tool_murules-empty-title">{{#str}} norules_title, tool_murules {{/str}}</h3>
+            <p class="tool_murules-empty-body">{{#str}} norules, tool_murules {{/str}}</p>
+            <a class="btn btn-primary" href="{{createurl}}">{{#str}} createrule, tool_murules {{/str}}</a>
+        </div>
     {{/hasrules}}
     {{#hasrules}}
-        <div class="tool_murules-cards">
+        <div class="tool_murules-cards" role="list">
             {{#rules}}
-                {{> tool_murules/rule_card}}
+                <div role="listitem">
+                    {{> tool_murules/rule_card}}
+                </div>
             {{/rules}}
         </div>
     {{/hasrules}}

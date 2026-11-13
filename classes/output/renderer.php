@@ -56,9 +56,12 @@ class renderer extends plugin_renderer_base {
                 }
             }
             $stats = rule::get_match_stats((int)$rec->id);
+            $config = rule::condition_config($rec);
+            $broken = $condition ? $condition->is_broken($config) : true;
             $rules[] = [
                 'name' => format_string($rec->name),
                 'enabled' => (int)$rec->enabled === 1,
+                'broken' => $broken,
                 'when' => $when,
                 'then' => implode('; ', $thenparts),
                 'stats' => get_string('matchstats', 'tool_murules', (object)$stats),
@@ -92,11 +95,45 @@ class renderer extends plugin_renderer_base {
      */
     public function wizard_steps(string $current): string {
         $steps = ['event', 'actions', 'review'];
-        $html = html_writer::start_div('tool_murules-wizard-steps');
-        foreach ($steps as $step) {
-            $class = $step === $current ? 'is-current' : '';
-            $html .= html_writer::tag('span', get_string('wizard_' . $step, 'tool_murules'), ['class' => $class]);
+        $currentidx = array_search($current, $steps, true);
+        $html = html_writer::start_tag('nav', [
+            'class' => 'tool_murules-wizard-steps',
+            'aria-label' => get_string('wizard_steps_label', 'tool_murules'),
+        ]);
+        $html .= html_writer::start_tag('ol', ['class' => 'tool_murules-wizard-steps-list']);
+        foreach ($steps as $idx => $step) {
+            $classes = ['tool_murules-wizard-step'];
+            if ($step === $current) {
+                $classes[] = 'is-current';
+            } else if ($currentidx !== false && $idx < $currentidx) {
+                $classes[] = 'is-done';
+            }
+            $label = html_writer::tag('span', (string)($idx + 1), ['class' => 'tool_murules-wizard-num', 'aria-hidden' => 'true']);
+            $label .= ' ' . get_string('wizard_' . $step, 'tool_murules');
+            $attrs = ['class' => implode(' ', $classes)];
+            if ($step === $current) {
+                $attrs['aria-current'] = 'step';
+            }
+            $html .= html_writer::tag('li', $label, $attrs);
         }
+        $html .= html_writer::end_tag('ol');
+        $html .= html_writer::end_tag('nav');
+        return $html;
+    }
+
+    /**
+     * Empty overview callout.
+     *
+     * @param string $createurl
+     * @return string
+     */
+    public function empty_rules(string $createurl): string {
+        $html = html_writer::start_div('tool_murules-empty');
+        $html .= html_writer::tag('h3', get_string('norules_title', 'tool_murules'), ['class' => 'tool_murules-empty-title']);
+        $html .= html_writer::tag('p', get_string('norules', 'tool_murules'), ['class' => 'tool_murules-empty-body']);
+        $html .= html_writer::link($createurl, get_string('createrule', 'tool_murules'), [
+            'class' => 'btn btn-primary',
+        ]);
         $html .= html_writer::end_div();
         return $html;
     }

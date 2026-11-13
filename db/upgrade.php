@@ -42,5 +42,13 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Wizard polish: course→CM AJAX webservice + Review matching estimate.
         upgrade_plugin_savepoint(true, 2026111303, 'tool', 'murules');
     }
+    if ($oldversion < 2026111304) {
+        // Fix Event/Actions Save-and-continue: single-panel forms (no hidden requireds).
+        upgrade_plugin_savepoint(true, 2026111304, 'tool', 'murules');
+    }
+    if ($oldversion < 2026111305) {
+        // UX marathon: empty states, wizard step a11y, save notice, CM redisplay options.
+        upgrade_plugin_savepoint(true, 2026111305, 'tool', 'murules');
+    }
     return true;
 }

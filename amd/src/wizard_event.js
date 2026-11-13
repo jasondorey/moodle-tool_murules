@@ -1,5 +1,5 @@
 /**
- * Event-step wizard polish: condition panels + course→CM AJAX.
+ * Event-step wizard: condition-type reload + course→CM AJAX.
  *
  * @module     tool_murules/wizard_event
  * @copyright  2026
@@ -23,9 +23,10 @@ define(['core/ajax', 'core/notification', 'core/str'], function(Ajax, Notificati
      * @param {Array<{id:number,name:string}>} cms
      * @param {string} chooseLabel
      * @param {string} emptyLabel
+     * @param {string|null} preferred
      */
-    const fillSelect = (select, cms, chooseLabel, emptyLabel) => {
-        const previous = select.value;
+    const fillSelect = (select, cms, chooseLabel, emptyLabel, preferred) => {
+        const previous = preferred || select.value;
         select.innerHTML = '';
         const placeholder = document.createElement('option');
         placeholder.value = '0';
@@ -37,12 +38,25 @@ define(['core/ajax', 'core/notification', 'core/str'], function(Ajax, Notificati
             opt.textContent = cm.name;
             select.appendChild(opt);
         });
-        if (previous && [...select.options].some((o) => o.value === previous)) {
+        if (previous && previous !== '0' && [...select.options].some((o) => o.value === previous)) {
             select.value = previous;
         } else {
             select.value = '0';
         }
         select.disabled = false;
+        select.dispatchEvent(new Event('change', {bubbles: true}));
+    };
+
+    /**
+     * @param {HTMLElement} courseEl
+     * @return {number}
+     */
+    const readCourseId = (courseEl) => {
+        if (courseEl.multiple) {
+            const selected = [...courseEl.selectedOptions].map((o) => parseInt(o.value, 10)).filter(Boolean);
+            return selected.length ? selected[0] : 0;
+        }
+        return parseInt(courseEl.value, 10) || 0;
     };
 
     /**
@@ -50,23 +64,18 @@ define(['core/ajax', 'core/notification', 'core/str'], function(Ajax, Notificati
      * @param {string} chooseLabel
      * @param {string} emptyLabel
      * @param {string} loadingLabel
+     * @param {string|null} preferredCm
      * @return {Promise}
      */
-    const refreshCm = (pair, chooseLabel, emptyLabel, loadingLabel) => {
+    const refreshCm = (pair, chooseLabel, emptyLabel, loadingLabel, preferredCm) => {
         const courseEl = byName(pair.course);
         const cmEl = byName(pair.cm);
         if (!courseEl || !cmEl) {
             return Promise.resolve();
         }
-        let courseid = 0;
-        if (courseEl.multiple) {
-            const selected = [...courseEl.selectedOptions].map((o) => parseInt(o.value, 10)).filter(Boolean);
-            courseid = selected.length ? selected[0] : 0;
-        } else {
-            courseid = parseInt(courseEl.value, 10) || 0;
-        }
+        const courseid = readCourseId(courseEl);
         if (!courseid) {
-            fillSelect(cmEl, [], chooseLabel, emptyLabel);
+            fillSelect(cmEl, [], chooseLabel, emptyLabel, null);
             return Promise.resolve();
         }
         cmEl.disabled = true;
@@ -80,29 +89,34 @@ define(['core/ajax', 'core/notification', 'core/str'], function(Ajax, Notificati
             methodname: 'tool_murules_get_course_cms',
             args: {courseid: courseid, mode: pair.mode},
         }])[0].then((response) => {
-            fillSelect(cmEl, response.cms || [], chooseLabel, emptyLabel);
+            fillSelect(cmEl, response.cms || [], chooseLabel, emptyLabel, preferredCm || null);
             return response;
-        }).catch(Notification.exception);
+        }).catch((error) => {
+            cmEl.disabled = false;
+            Notification.exception(error);
+        });
     };
 
     /**
-     * Show only the fieldset for the selected condition type.
+     * Reload Event step when condition type changes (single-panel form).
+     *
+     * @param {HTMLSelectElement} typeEl
      */
-    const syncConditionPanels = () => {
-        const typeEl = byName('conditiontype');
-        if (!typeEl) {
-            return;
-        }
-        const selected = typeEl.value;
-        document.querySelectorAll('fieldset[id^="id_hdr_"]').forEach((fs) => {
-            const type = fs.id.replace(/^id_hdr_/, '');
-            const show = type === selected;
-            fs.classList.toggle('tool_murules-condition-hidden', !show);
-            fs.hidden = !show;
-            // Keep collapsed headers from fighting us.
-            if (show) {
-                fs.classList.remove('collapsed');
+    const bindTypeReload = (typeEl) => {
+        const initial = typeEl.value;
+        typeEl.addEventListener('change', () => {
+            if (typeEl.value === initial) {
+                return;
             }
+            const url = new URL(window.location.href);
+            url.searchParams.set('step', 'event');
+            url.searchParams.set('pick', typeEl.value);
+            // Preserve edit id if present.
+            const idEl = byName('id');
+            if (idEl && idEl.value && idEl.value !== '0') {
+                url.searchParams.set('id', idEl.value);
+            }
+            window.location.href = url.toString();
         });
     };
 
@@ -115,6 +129,11 @@ define(['core/ajax', 'core/notification', 'core/str'], function(Ajax, Notificati
             return;
         }
 
+        const typeEl = byName('conditiontype');
+        if (typeEl) {
+            bindTypeReload(typeEl);
+        }
+
         Str.get_strings([
             {key: 'choosedots', component: 'moodle'},
             {key: 'nocms', component: 'tool_murules'},
@@ -124,20 +143,22 @@ define(['core/ajax', 'core/notification', 'core/str'], function(Ajax, Notificati
             const emptyLabel = strings[1];
             const loadingLabel = strings[2];
 
-            const typeEl = byName('conditiontype');
-            if (typeEl) {
-                typeEl.addEventListener('change', syncConditionPanels);
-                syncConditionPanels();
-            }
-
             PAIRS.forEach((pair) => {
                 const courseEl = byName(pair.course);
-                if (!courseEl) {
+                const cmEl = byName(pair.cm);
+                if (!courseEl || !cmEl) {
                     return;
                 }
+                const preferredCm = cmEl.value && cmEl.value !== '0' ? cmEl.value : null;
                 courseEl.addEventListener('change', () => {
-                    refreshCm(pair, chooseLabel, emptyLabel, loadingLabel);
+                    refreshCm(pair, chooseLabel, emptyLabel, loadingLabel, null);
                 });
+                // If course already chosen but CM list is empty/placeholder-only, hydrate via AJAX.
+                const courseid = readCourseId(courseEl);
+                const onlyPlaceholder = cmEl.options.length <= 1;
+                if (courseid && onlyPlaceholder) {
+                    refreshCm(pair, chooseLabel, emptyLabel, loadingLabel, preferredCm);
+                }
             });
             return;
         }).catch(Notification.exception);

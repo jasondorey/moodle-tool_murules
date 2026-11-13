@@ -70,15 +70,24 @@ class quiz_score extends base {
             $mform->setDefault('qs_courseid', [(int)$config['courseid']]);
         }
 
-        $quizoptions = [0 => get_string('choosedots')];
+        // Prefer saved config; on redisplay after submit also read posted course so AJAX-filled
+        // CM options still exist in the select (Moodle rejects values missing from options).
         $courseid = (int)($config['courseid'] ?? 0);
+        if (!$courseid) {
+            $courseid = self::normalize_courseid($_POST['qs_courseid'] ?? 0);
+        }
+        $quizoptions = [0 => get_string('choosedots')];
         if ($courseid) {
             $quizoptions += \tool_murules\local\course_modules::options_map($courseid, 'quiz');
         }
+        $postedcm = (int)($config['cmid'] ?? ($_POST['qs_cmid'] ?? 0));
+        if ($postedcm && !isset($quizoptions[$postedcm])) {
+            $quizoptions[$postedcm] = get_string('quiz', 'tool_murules') . ' (#' . $postedcm . ')';
+        }
         $mform->addElement('select', 'qs_cmid', get_string('quiz', 'tool_murules'), $quizoptions);
         $mform->addRule('qs_cmid', get_string('error_noquiz', 'tool_murules'), 'required', null, 'client');
-        if (!empty($config['cmid'])) {
-            $mform->setDefault('qs_cmid', $config['cmid']);
+        if ($postedcm) {
+            $mform->setDefault('qs_cmid', $postedcm);
         }
 
         $ops = [

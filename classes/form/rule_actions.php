@@ -21,6 +21,8 @@ use tool_murules\local\registry;
 /**
  * Wizard step 2: Actions (THEN).
  *
+ * Only the selected action's fields are rendered (same pattern as Event step).
+ *
  * @package    tool_murules
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,7 +32,7 @@ class rule_actions extends \moodleform {
     protected function definition(): void {
         $mform = $this->_form;
         $custom = $this->_customdata;
-        $actiontype = $custom['actiontype'] ?? 'allocate_muprog';
+        $actiontype = (string)($custom['actiontype'] ?? 'allocate_muprog');
         $actionconfig = $custom['actionconfig'] ?? [];
 
         $mform->addElement('hidden', 'id');
@@ -41,15 +43,17 @@ class rule_actions extends \moodleform {
         $menu = registry::get_action_menu(true);
         $mform->addElement('select', 'actiontype', get_string('actiontype', 'tool_murules'), $menu);
         $mform->addRule('actiontype', get_string('error_action', 'tool_murules'), 'required', null, 'client');
-        $mform->setDefault('actiontype', $actiontype ?: 'allocate_muprog');
 
-        foreach (registry::get_actions() as $type => $action) {
-            if (!$action->is_available()) {
-                continue;
-            }
-            $mform->addElement('header', 'ahdr_' . $type, $action->get_name());
-            $cfg = ($type === $actiontype) ? $actionconfig : [];
-            $action->add_config_form_elements($mform, $cfg);
+        if (!$actiontype || !registry::get_action($actiontype)) {
+            $actiontype = (string)array_key_first($menu);
+        }
+        $mform->setDefault('actiontype', $actiontype);
+
+        $action = registry::get_action($actiontype);
+        if ($action && $action->is_available()) {
+            $mform->addElement('header', 'ahdr_config', $action->get_name());
+            $mform->setExpanded('ahdr_config', true);
+            $action->add_config_form_elements($mform, $actionconfig);
         }
 
         $this->add_action_buttons(true, get_string('saveandcontinue', 'tool_murules'));

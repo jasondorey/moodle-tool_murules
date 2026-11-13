@@ -39,15 +39,26 @@ $PAGE->navbar->add(format_string($rulerec->name));
 
 echo $OUTPUT->header();
 echo html_writer::div(
-    html_writer::link(new moodle_url('/admin/tool/murules/index.php'), get_string('back', 'tool_murules')),
-    'mb-3'
+    html_writer::link(new moodle_url('/admin/tool/murules/index.php'), get_string('back', 'tool_murules'), [
+        'class' => 'btn btn-link btn-sm px-0',
+    ]) .
+    ' · ' .
+    html_writer::link(new moodle_url('/admin/tool/murules/edit.php', ['id' => $id]), get_string('editrule', 'tool_murules'), [
+        'class' => 'btn btn-link btn-sm px-0',
+    ]),
+    'tool_murules-log-nav mb-3'
 );
 
 $perpage = 50;
 $page = optional_param('page', 0, PARAM_INT);
 $total = $DB->count_records('tool_murules_match', ['ruleid' => $id]);
 if (!$total) {
-    echo $OUTPUT->notification(get_string('nologentries', 'tool_murules'), 'info');
+    echo html_writer::div(
+        html_writer::tag('h3', get_string('nologentries_title', 'tool_murules'), ['class' => 'tool_murules-empty-title']) .
+        html_writer::tag('p', get_string('nologentries', 'tool_murules'), ['class' => 'tool_murules-empty-body']) .
+        html_writer::tag('p', get_string('nologentries_help', 'tool_murules'), ['class' => 'text-muted']),
+        'tool_murules-empty'
+    );
     echo $OUTPUT->footer();
     exit;
 }

@@ -61,15 +61,24 @@ class activity_completed extends base {
             $mform->setDefault('ac_courseid', [(int)$config['courseid']]);
         }
 
-        $options = [0 => get_string('choosedots')];
+        // Prefer saved config; on redisplay after submit also read posted course so AJAX-filled
+        // CM options still exist in the select (Moodle rejects values missing from options).
         $courseid = (int)($config['courseid'] ?? 0);
+        if (!$courseid) {
+            $courseid = self::normalize_courseid($_POST['ac_courseid'] ?? 0);
+        }
+        $options = [0 => get_string('choosedots')];
         if ($courseid) {
             $options += \tool_murules\local\course_modules::options_map($courseid, 'activity');
         }
+        $postedcm = (int)($config['cmid'] ?? ($_POST['ac_cmid'] ?? 0));
+        if ($postedcm && !isset($options[$postedcm])) {
+            $options[$postedcm] = get_string('activity', 'tool_murules') . ' (#' . $postedcm . ')';
+        }
         $mform->addElement('select', 'ac_cmid', get_string('activity', 'tool_murules'), $options);
         $mform->addRule('ac_cmid', get_string('error_noactivity', 'tool_murules'), 'required', null, 'client');
-        if (!empty($config['cmid'])) {
-            $mform->setDefault('ac_cmid', $config['cmid']);
+        if ($postedcm) {
+            $mform->setDefault('ac_cmid', $postedcm);
         }
     }
 

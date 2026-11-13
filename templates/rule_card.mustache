@@ -1,13 +1,18 @@
 {{!
     @template tool_murules/rule_card
 }}
-<article class="tool_murules-card">
+<article class="tool_murules-card {{#broken}}is-broken{{/broken}}">
     <div class="tool_murules-card-head">
         <h3 class="tool_murules-card-title">{{name}}</h3>
-        <span class="tool_murules-badge {{#enabled}}is-enabled{{/enabled}}">
-            {{#enabled}}{{#str}} ruleenabled, tool_murules {{/str}}{{/enabled}}
-            {{^enabled}}{{#str}} ruledisabled, tool_murules {{/str}}{{/enabled}}
-        </span>
+        <div class="tool_murules-badges">
+            <span class="tool_murules-badge {{#enabled}}is-enabled{{/enabled}}">
+                {{#enabled}}{{#str}} ruleenabled, tool_murules {{/str}}{{/enabled}}
+                {{^enabled}}{{#str}} ruledisabled, tool_murules {{/str}}{{/enabled}}
+            </span>
+            {{#broken}}
+                <span class="tool_murules-badge is-broken">{{#str}} rulebroken, tool_murules {{/str}}</span>
+            {{/broken}}
+        </div>
     </div>
     <div class="tool_murules-flow">
         <div class="tool_murules-when">

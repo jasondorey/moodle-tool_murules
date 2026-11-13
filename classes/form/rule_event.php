@@ -21,6 +21,9 @@ use tool_murules\local\registry;
 /**
  * Wizard step 1: Event (WHEN).
  *
+ * Only the selected condition's fields are rendered so client-side required
+ * rules cannot block submit from hidden panels.
+ *
  * @package    tool_murules
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,7 +33,7 @@ class rule_event extends \moodleform {
     protected function definition(): void {
         $mform = $this->_form;
         $custom = $this->_customdata;
-        $conditiontype = $custom['conditiontype'] ?? '';
+        $conditiontype = (string)($custom['conditiontype'] ?? '');
         $conditionconfig = $custom['conditionconfig'] ?? [];
 
         $mform->addElement('hidden', 'id');
@@ -41,28 +44,21 @@ class rule_event extends \moodleform {
         $menu = registry::get_condition_menu(true);
         $mform->addElement('selectgroups', 'conditiontype', get_string('conditiontype', 'tool_murules'), $menu);
         $mform->addRule('conditiontype', get_string('error_condition', 'tool_murules'), 'required', null, 'client');
-        if ($conditiontype) {
-            $mform->setDefault('conditiontype', $conditiontype);
-        }
 
-        // Show config for selected (or first) condition.
         $selected = $conditiontype;
-        if (!$selected) {
+        if (!$selected || !registry::get_condition($selected)) {
             foreach ($menu as $group) {
-                $selected = array_key_first($group);
+                $selected = (string)array_key_first($group);
                 break;
             }
         }
-        // Render elements for all available conditions; AMD shows only the selected panel.
-        foreach (registry::get_conditions() as $type => $condition) {
-            if (!$condition->is_available()) {
-                continue;
-            }
-            $mform->addElement('header', 'hdr_' . $type, $condition->get_name());
-            $mform->setExpanded('hdr_' . $type, $type === $selected);
-            $cfg = ($type === $conditiontype) ? $conditionconfig : [];
-            $condition->add_config_form_elements($mform, $cfg);
-            // validate/extract only the selected type on submit.
+        $mform->setDefault('conditiontype', $selected);
+
+        $condition = registry::get_condition($selected);
+        if ($condition && $condition->is_available()) {
+            $mform->addElement('header', 'hdr_config', $condition->get_name());
+            $mform->setExpanded('hdr_config', true);
+            $condition->add_config_form_elements($mform, $conditionconfig);
         }
 
         $this->add_action_buttons(true, get_string('saveandcontinue', 'tool_murules'));
