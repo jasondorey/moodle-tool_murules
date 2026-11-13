@@ -110,5 +110,9 @@ function xmldb_tool_murules_upgrade($oldversion) {
         // Log showing context + result count line.
         upgrade_plugin_savepoint(true, 2026111320, 'tool', 'murules');
     }
+    if ($oldversion < 2026111321) {
+        // Empty-state copy polish + create CTA on filter-empty.
+        upgrade_plugin_savepoint(true, 2026111321, 'tool', 'murules');
+    }
     return true;
 }
