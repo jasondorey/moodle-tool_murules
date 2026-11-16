@@ -119,6 +119,7 @@ export default function Wizard({ruleid = 0, returnurl}: WizardProps) {
                 <ActionsStep
                     catalog={boot.actionCatalog}
                     actions={draft.actions}
+                    conditions={draft.conditions}
                     whenSummary={whenSummary}
                     strings={strings}
                     onChange={(actions) => setDraft({...draft, actions})}

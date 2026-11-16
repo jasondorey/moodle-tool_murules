@@ -159,8 +159,8 @@ final class state {
             'pickaction', 'pickaction_hint', 'pickaction_help',
             'configure_action', 'changeaction', 'retry', 'form_has_errors', 'loading_editor',
             'search_courses_placeholder', 'searching_courses', 'no_courses_found',
-            'course_search_error', 'selected_course', 'clear_course', 'choose_course_first',
-            'cms_load_error', 'estimate_error', 'estimating', 'save_error', 'saving',
+            'course_search_error', 'course_search_tenant_hint', 'selected_course', 'clear_course',
+            'choose_course_first', 'cms_load_error', 'estimate_error', 'estimating', 'save_error', 'saving',
         ];
         $out = [];
         foreach ($keys as $key) {

@@ -45,12 +45,20 @@ function fromDatetimeLocal(value) {
   return Number.isFinite(ms) ? Math.floor(ms / 1e3) : 0;
 }
 __name(fromDatetimeLocal, "fromDatetimeLocal");
-function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
+function SchemaForm({
+  schema,
+  values,
+  errors = {},
+  strings,
+  onChange,
+  tenantId = 0
+}) {
   const [courseOptions, setCourseOptions] = useState([]);
   const [courseQuery, setCourseQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [courseLoading, setCourseLoading] = useState(false);
   const [courseError, setCourseError] = useState("");
+  const [tenantScoped, setTenantScoped] = useState(false);
   const [cmsByField, setCmsByField] = useState({});
   const [cmsLoading, setCmsLoading] = useState(false);
   const [cmsError, setCmsError] = useState("");
@@ -74,13 +82,15 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
     const preferred = Number(values[courseFields[0].name] || 0);
     setCourseLoading(true);
     setCourseError("");
-    searchCourses(debouncedQuery, preferred).then((courses) => {
+    searchCourses(debouncedQuery, preferred, tenantId || 0).then((result) => {
       if (!cancelled) {
-        setCourseOptions(courses);
+        setCourseOptions(result.courses);
+        setTenantScoped(result.tenantscoped);
       }
     }).catch((err) => {
       if (!cancelled) {
         setCourseOptions([]);
+        setTenantScoped(false);
         setCourseError(err.message || strings.course_search_error || "Course search failed");
       }
     }).finally(() => {
@@ -91,7 +101,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, courseFields, values, strings.course_search_error]);
+  }, [debouncedQuery, courseFields, values, strings.course_search_error, tenantId]);
   useEffect(() => {
     if (!cmFields.length) {
       return;
@@ -151,7 +161,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
       field.required ? " *" : ""
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-      lineNumber: 173,
+      lineNumber: 185,
       columnNumber: 21
     }, this);
     let control = null;
@@ -162,17 +172,17 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           /* @__PURE__ */ jsxDEV("span", { children: [
             /* @__PURE__ */ jsxDEV("span", { className: "small text-muted d-block", children: strings.selected_course || "Selected course" }, void 0, false, {
               fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-              lineNumber: 187,
+              lineNumber: 199,
               columnNumber: 41
             }, this),
             /* @__PURE__ */ jsxDEV("strong", { children: selectedLabel }, void 0, false, {
               fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-              lineNumber: 190,
+              lineNumber: 202,
               columnNumber: 41
             }, this)
           ] }, void 0, true, {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 186,
+            lineNumber: 198,
             columnNumber: 37
           }, this),
           /* @__PURE__ */ jsxDEV(
@@ -187,14 +197,14 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
             false,
             {
               fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-              lineNumber: 192,
+              lineNumber: 204,
               columnNumber: 37
             },
             this
           )
         ] }, void 0, true, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 185,
+          lineNumber: 197,
           columnNumber: 33
         }, this) : null,
         /* @__PURE__ */ jsxDEV(
@@ -212,24 +222,29 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           false,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 201,
+            lineNumber: 213,
             columnNumber: 29
           },
           this
         ),
+        tenantScoped ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted", children: strings.course_search_tenant_hint || "Showing courses in the matched tenant." }, void 0, false, {
+          fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
+          lineNumber: 223,
+          columnNumber: 33
+        }, this) : null,
         courseLoading ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted", children: strings.searching_courses || "Searching\u2026" }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 211,
+          lineNumber: 229,
           columnNumber: 33
         }, this) : null,
         courseError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-warning py-2 mb-0", role: "alert", children: courseError }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 214,
+          lineNumber: 232,
           columnNumber: 33
         }, this) : null,
         !courseLoading && !courseError && courseOptions.length === 0 ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted", children: strings.no_courses_found || "No courses match your search." }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 217,
+          lineNumber: 235,
           columnNumber: 33
         }, this) : null,
         /* @__PURE__ */ jsxDEV(
@@ -242,12 +257,12 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
             children: [
               /* @__PURE__ */ jsxDEV("option", { value: "0", children: strings.choosedots || "\u2026" }, void 0, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-                lineNumber: 227,
+                lineNumber: 245,
                 columnNumber: 33
               }, this),
               courseOptions.map((c) => /* @__PURE__ */ jsxDEV("option", { value: c.id, children: c.name }, c.id, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-                lineNumber: 229,
+                lineNumber: 247,
                 columnNumber: 37
               }, this))
             ]
@@ -256,14 +271,14 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           true,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 221,
+            lineNumber: 239,
             columnNumber: 29
           },
           this
         )
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-        lineNumber: 183,
+        lineNumber: 195,
         columnNumber: 25
       }, this);
     } else if (field.type === "coursemodule") {
@@ -272,12 +287,12 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
       control = /* @__PURE__ */ jsxDEV("div", { children: [
         cmsLoading ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted mb-1", children: strings.loadingcms || "Loading\u2026" }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 240,
+          lineNumber: 258,
           columnNumber: 33
         }, this) : null,
         cmsError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-warning py-2 mb-2", role: "alert", children: cmsError }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 243,
+          lineNumber: 261,
           columnNumber: 33
         }, this) : null,
         /* @__PURE__ */ jsxDEV(
@@ -291,12 +306,12 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
             children: [
               /* @__PURE__ */ jsxDEV("option", { value: "0", children: !hasCourse ? strings.choose_course_first || strings.choosedots || "\u2026" : cms.length ? strings.choosedots || "\u2026" : strings.nocms || "No activities" }, void 0, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-                lineNumber: 252,
+                lineNumber: 270,
                 columnNumber: 33
               }, this),
               cms.map((cm) => /* @__PURE__ */ jsxDEV("option", { value: cm.id, children: cm.name }, cm.id, false, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-                lineNumber: 260,
+                lineNumber: 278,
                 columnNumber: 37
               }, this))
             ]
@@ -305,14 +320,14 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           true,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 245,
+            lineNumber: 263,
             columnNumber: 29
           },
           this
         )
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-        lineNumber: 238,
+        lineNumber: 256,
         columnNumber: 25
       }, this);
     } else if (field.type === "select") {
@@ -325,7 +340,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
           onChange: (e) => setValue(field.name, e.target.value),
           children: (field.options || []).map((opt) => /* @__PURE__ */ jsxDEV("option", { value: opt.value, children: opt.label }, opt.value, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-            lineNumber: 274,
+            lineNumber: 292,
             columnNumber: 33
           }, this))
         },
@@ -333,7 +348,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 267,
+          lineNumber: 285,
           columnNumber: 25
         },
         this
@@ -352,7 +367,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 280,
+          lineNumber: 298,
           columnNumber: 25
         },
         this
@@ -371,7 +386,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 290,
+          lineNumber: 308,
           columnNumber: 25
         },
         this
@@ -393,7 +408,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 300,
+          lineNumber: 318,
           columnNumber: 25
         },
         this
@@ -412,7 +427,7 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
         false,
         {
           fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-          lineNumber: 315,
+          lineNumber: 333,
           columnNumber: 25
         },
         this
@@ -423,17 +438,17 @@ function SchemaForm({ schema, values, errors = {}, strings, onChange }) {
       control,
       err ? /* @__PURE__ */ jsxDEV("div", { className: "invalid-feedback d-block", children: err }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-        lineNumber: 329,
+        lineNumber: 347,
         columnNumber: 32
       }, this) : null
     ] }, field.name, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-      lineNumber: 326,
+      lineNumber: 344,
       columnNumber: 21
     }, this);
   }) }, void 0, false, {
     fileName: "public/admin/tool/murules/js/esm/src/components/SchemaForm.tsx",
-    lineNumber: 165,
+    lineNumber: 177,
     columnNumber: 9
   }, this);
 }

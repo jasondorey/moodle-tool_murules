@@ -245,5 +245,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111343, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111600) {
+        // New enrol_course action + tenant-scoped course search.
+        upgrade_plugin_savepoint(true, 2026111600, 'tool', 'murules');
+    }
+
     return true;
 }

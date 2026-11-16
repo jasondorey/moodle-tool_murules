@@ -111,6 +111,7 @@ final class config_bridge {
                 'cohort_add' => ['cohortid' => 'ca_cohortid'],
                 'cohort_remove' => ['cohortid' => 'cr_cohortid'],
                 'notify_user' => ['subject' => 'nu_subject', 'body' => 'nu_body'],
+                'enrol_course' => ['courseid' => 'ec_courseid', 'roleid' => 'ec_roleid'],
                 default => [],
             };
         }

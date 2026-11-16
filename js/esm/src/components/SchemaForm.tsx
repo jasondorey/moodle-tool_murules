@@ -15,6 +15,8 @@ type Props = {
     errors?: Record<string, string>;
     strings: Record<string, string>;
     onChange: (next: Record<string, unknown>) => void;
+    /** When set, course search prefers courses in this MuTMS tenant category. */
+    tenantId?: number;
 };
 
 function visible(field: EditorField, values: Record<string, unknown>): boolean {
@@ -53,12 +55,20 @@ function fromDatetimeLocal(value: string): number {
     return Number.isFinite(ms) ? Math.floor(ms / 1000) : 0;
 }
 
-export default function SchemaForm({schema, values, errors = {}, strings, onChange}: Props) {
+export default function SchemaForm({
+    schema,
+    values,
+    errors = {},
+    strings,
+    onChange,
+    tenantId = 0,
+}: Props) {
     const [courseOptions, setCourseOptions] = useState<Array<{id: number; name: string}>>([]);
     const [courseQuery, setCourseQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
     const [courseLoading, setCourseLoading] = useState(false);
     const [courseError, setCourseError] = useState('');
+    const [tenantScoped, setTenantScoped] = useState(false);
     const [cmsByField, setCmsByField] = useState<Record<string, Array<{id: number; name: string}>>>({});
     const [cmsLoading, setCmsLoading] = useState(false);
     const [cmsError, setCmsError] = useState('');
@@ -85,15 +95,17 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
         const preferred = Number(values[courseFields[0].name] || 0);
         setCourseLoading(true);
         setCourseError('');
-        searchCourses(debouncedQuery, preferred)
-            .then((courses) => {
+        searchCourses(debouncedQuery, preferred, tenantId || 0)
+            .then((result) => {
                 if (!cancelled) {
-                    setCourseOptions(courses);
+                    setCourseOptions(result.courses);
+                    setTenantScoped(result.tenantscoped);
                 }
             })
             .catch((err: Error) => {
                 if (!cancelled) {
                     setCourseOptions([]);
+                    setTenantScoped(false);
                     setCourseError(err.message || strings.course_search_error || 'Course search failed');
                 }
             })
@@ -105,7 +117,7 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
         return () => {
             cancelled = true;
         };
-    }, [debouncedQuery, courseFields, values, strings.course_search_error]);
+    }, [debouncedQuery, courseFields, values, strings.course_search_error, tenantId]);
 
     useEffect(() => {
         if (!cmFields.length) {
@@ -207,6 +219,12 @@ export default function SchemaForm({schema, values, errors = {}, strings, onChan
                                 aria-label={strings.search_courses || 'Course'}
                                 autoComplete="off"
                             />
+                            {tenantScoped ? (
+                                <div className="small text-muted">
+                                    {strings.course_search_tenant_hint ||
+                                        'Showing courses in the matched tenant.'}
+                                </div>
+                            ) : null}
                             {courseLoading ? (
                                 <div className="small text-muted">{strings.searching_courses || 'Searching…'}</div>
                             ) : null}

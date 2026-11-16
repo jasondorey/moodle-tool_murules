@@ -70,6 +70,15 @@ final class wizard_bridge_test extends \advanced_testcase {
         $this->assertContains('body', $names);
     }
 
+    public function test_action_schema_enrol_course(): void {
+        $this->resetAfterTest();
+        $schema = field_schemas::for_type('action', 'enrol_course');
+        $names = array_column($schema['fields'], 'name');
+        $this->assertContains('courseid', $names);
+        $this->assertContains('roleid', $names);
+        $this->assertArrayHasKey('courseid', $schema['defaults']);
+    }
+
     public function test_validate_time_window_amount(): void {
         $this->resetAfterTest();
         $bad = config_bridge::validate_and_extract('condition', 'user_created_since', [

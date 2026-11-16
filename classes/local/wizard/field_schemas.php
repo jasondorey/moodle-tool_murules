@@ -262,6 +262,16 @@ final class field_schemas {
                 ],
                 'defaults' => ['subject' => '', 'body' => ''],
             ],
+            'enrol_course' => [
+                'fields' => [
+                    self::course_field('courseid', true),
+                    self::select_field('roleid', get_string('enrol_role', 'tool_murules'), self::enrol_role_options()),
+                ],
+                'defaults' => [
+                    'courseid' => 0,
+                    'roleid' => (string)self::default_student_roleid(),
+                ],
+            ],
             default => ['fields' => [], 'defaults' => []],
         };
     }
@@ -508,6 +518,37 @@ final class field_schemas {
             $out[(string)$row->id] = $label;
         }
         return $out;
+    }
+
+    /**
+     * Enrolment role menu for course enrol actions.
+     *
+     * @return array<int|string,string>
+     */
+    private static function enrol_role_options(): array {
+        $context = \context_course::instance(SITEID);
+        $roles = get_default_enrol_roles($context);
+        if (!$roles) {
+            $student = self::default_student_roleid();
+            return $student ? [$student => get_string('enrol_role_student_default', 'tool_murules')] : [];
+        }
+        return $roles;
+    }
+
+    /**
+     * @return int
+     */
+    private static function default_student_roleid(): int {
+        $configured = (int)get_config('enrol_manual', 'roleid');
+        if ($configured) {
+            return $configured;
+        }
+        $student = get_archetype_roles('student');
+        if ($student) {
+            $first = reset($student);
+            return (int)$first->id;
+        }
+        return 0;
     }
 
     /**

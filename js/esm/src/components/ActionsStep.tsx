@@ -5,15 +5,16 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {loadSchema, validateConfig} from '../services/api';
-import type {ActionItem, CatalogAction, EditorSchema} from '../types';
+import type {ActionItem, CatalogAction, ConditionItem, EditorSchema} from '../types';
 import ActionCards from './ActionCards';
 import SchemaForm from './SchemaForm';
 
 type Props = {
     catalog: CatalogAction[];
     actions: ActionItem[];
+    conditions?: ConditionItem[];
     whenSummary: string;
     strings: Record<string, string>;
     onChange: (actions: ActionItem[]) => void;
@@ -24,6 +25,7 @@ type Props = {
 export default function ActionsStep({
     catalog,
     actions,
+    conditions = [],
     whenSummary,
     strings,
     onChange,
@@ -38,6 +40,11 @@ export default function ActionsStep({
     const [busy, setBusy] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [schemaRetry, setSchemaRetry] = useState(0);
+
+    const tenantId = useMemo(() => {
+        const tenantCondition = conditions.find((c) => c.conditiontype === 'tenant_member');
+        return Number(tenantCondition?.conditionconfig?.tenantid || 0);
+    }, [conditions]);
 
     useEffect(() => {
         if (!pickType) {
@@ -218,6 +225,7 @@ export default function ActionsStep({
                                     values={values}
                                     errors={errors}
                                     strings={strings}
+                                    tenantId={pickType === 'enrol_course' ? tenantId : 0}
                                     onChange={(next) => {
                                         setValues(next);
                                         setFormError('');

@@ -174,6 +174,7 @@ function Wizard({ ruleid = 0, returnurl }) {
       {
         catalog: boot.actionCatalog,
         actions: draft.actions,
+        conditions: draft.conditions,
         whenSummary,
         strings,
         onChange: (actions) => setDraft({ ...draft, actions }),
@@ -203,18 +204,18 @@ function Wizard({ ruleid = 0, returnurl }) {
       false,
       {
         fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-        lineNumber: 131,
+        lineNumber: 132,
         columnNumber: 17
       },
       this
     ) : null,
     /* @__PURE__ */ jsxDEV("div", { className: "mt-4", children: /* @__PURE__ */ jsxDEV("a", { className: "btn btn-link px-0", href: returnurl, children: strings.cancelwizard }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 142,
+      lineNumber: 143,
       columnNumber: 17
     }, this) }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/Wizard.tsx",
-      lineNumber: 141,
+      lineNumber: 142,
       columnNumber: 13
     }, this)
   ] }, void 0, true, {

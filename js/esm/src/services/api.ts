@@ -53,12 +53,19 @@ export async function validateConfig(
 export async function searchCourses(
     query: string,
     courseid = 0,
-): Promise<Array<{id: number; name: string}>> {
-    const res = await fetchOne<{courses: Array<{id: number; name: string}>}>({
+    tenantid = 0,
+): Promise<{courses: Array<{id: number; name: string}>; tenantscoped: boolean}> {
+    const res = await fetchOne<{
+        courses: Array<{id: number; name: string}>;
+        tenantscoped: boolean;
+    }>({
         methodname: 'tool_murules_search_courses',
-        args: {query, courseid, limit: 40},
+        args: {query, courseid, limit: 40, tenantid},
     });
-    return res.courses || [];
+    return {
+        courses: res.courses || [],
+        tenantscoped: !!res.tenantscoped,
+    };
 }
 
 export async function loadCourseModules(

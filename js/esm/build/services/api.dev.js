@@ -40,12 +40,15 @@ async function validateConfig(kind, type, config) {
   };
 }
 __name(validateConfig, "validateConfig");
-async function searchCourses(query, courseid = 0) {
+async function searchCourses(query, courseid = 0, tenantid = 0) {
   const res = await fetchOne({
     methodname: "tool_murules_search_courses",
-    args: { query, courseid, limit: 40 }
+    args: { query, courseid, limit: 40, tenantid }
   });
-  return res.courses || [];
+  return {
+    courses: res.courses || [],
+    tenantscoped: !!res.tenantscoped
+  };
 }
 __name(searchCourses, "searchCourses");
 async function loadCourseModules(courseid, mode) {
