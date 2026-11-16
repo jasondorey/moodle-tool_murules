@@ -42,7 +42,11 @@ export default function ActionsStep({
     const [schemaRetry, setSchemaRetry] = useState(0);
 
     const tenantId = useMemo(() => {
-        const tenantCondition = conditions.find((c) => c.conditiontype === 'tenant_member');
+        const tenantCondition = conditions.find(
+            (c) =>
+                c.conditiontype === 'tenant_member' ||
+                c.conditiontype === 'user_first_auth_tenant',
+        );
         return Number(tenantCondition?.conditionconfig?.tenantid || 0);
     }, [conditions]);
 

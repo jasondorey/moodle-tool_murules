@@ -93,6 +93,7 @@ final class registry {
             'course',
             'activity',
             'user',
+            'authentication',
             'cohort',
             'competency',
             'program',

@@ -30,7 +30,9 @@ function ActionsStep({
   const [loadError, setLoadError] = useState("");
   const [schemaRetry, setSchemaRetry] = useState(0);
   const tenantId = useMemo(() => {
-    const tenantCondition = conditions.find((c) => c.conditiontype === "tenant_member");
+    const tenantCondition = conditions.find(
+      (c) => c.conditiontype === "tenant_member" || c.conditiontype === "user_first_auth_tenant"
+    );
     return Number(tenantCondition?.conditionconfig?.tenantid || 0);
   }, [conditions]);
   useEffect(() => {
@@ -100,44 +102,44 @@ function ActionsStep({
   return /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-actions-step", children: [
     /* @__PURE__ */ jsxDEV("h3", { className: "h4", children: strings.wizard_actions }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-      lineNumber: 121,
+      lineNumber: 125,
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("p", { className: "text-muted", children: strings.wizard_actions_help || strings.actions_help }, void 0, false, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-      lineNumber: 122,
+      lineNumber: 126,
       columnNumber: 13
     }, this),
     whenSummary ? /* @__PURE__ */ jsxDEV("div", { className: "mb-3", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "small text-muted text-uppercase", children: strings.when }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 125,
+        lineNumber: 129,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("div", { className: "tool_murules-recap", children: whenSummary }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 126,
+        lineNumber: 130,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-      lineNumber: 124,
+      lineNumber: 128,
       columnNumber: 17
     }, this) : null,
     /* @__PURE__ */ jsxDEV("section", { className: "tool_murules-saved-block mb-4", "aria-label": strings.actions_heading, children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "h5", children: strings.actions_heading }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 131,
+        lineNumber: 135,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-muted small", children: strings.actions_help }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 132,
+        lineNumber: 136,
         columnNumber: 17
       }, this),
       actions.length === 0 ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-secondary mb-0", children: strings.noactionsyet }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 134,
+        lineNumber: 138,
         columnNumber: 21
       }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
         /* @__PURE__ */ jsxDEV("ul", { className: "list-group mb-3 tool_murules-saved-list", children: actions.map((act, idx) => /* @__PURE__ */ jsxDEV(
@@ -148,18 +150,18 @@ function ActionsStep({
               /* @__PURE__ */ jsxDEV("div", { className: "me-auto", children: [
                 /* @__PURE__ */ jsxDEV("span", { className: "badge text-bg-primary me-2", children: "THEN" }, void 0, false, {
                   fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-                  lineNumber: 144,
+                  lineNumber: 148,
                   columnNumber: 41
                 }, this),
                 /* @__PURE__ */ jsxDEV("span", { className: "badge text-bg-secondary me-2", children: idx + 1 }, void 0, false, {
                   fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-                  lineNumber: 145,
+                  lineNumber: 149,
                   columnNumber: 41
                 }, this),
                 act.description || act.actiontype
               ] }, void 0, true, {
                 fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-                lineNumber: 143,
+                lineNumber: 147,
                 columnNumber: 37
               }, this),
               /* @__PURE__ */ jsxDEV(
@@ -174,7 +176,7 @@ function ActionsStep({
                 false,
                 {
                   fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-                  lineNumber: 148,
+                  lineNumber: 152,
                   columnNumber: 37
                 },
                 this
@@ -185,82 +187,82 @@ function ActionsStep({
           true,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 139,
+            lineNumber: 143,
             columnNumber: 33
           },
           this
         )) }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 137,
+          lineNumber: 141,
           columnNumber: 25
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "d-flex flex-wrap gap-2", children: [
           /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-primary", onClick: onContinue, children: strings.continuereview }, void 0, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 159,
+            lineNumber: 163,
             columnNumber: 29
           }, this),
           /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-outline-secondary", onClick: onBack, children: strings.back }, void 0, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 162,
+            lineNumber: 166,
             columnNumber: 29
           }, this)
         ] }, void 0, true, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 158,
+          lineNumber: 162,
           columnNumber: 25
         }, this)
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 136,
+        lineNumber: 140,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-      lineNumber: 130,
+      lineNumber: 134,
       columnNumber: 13
     }, this),
     !pickType ? /* @__PURE__ */ jsxDEV("section", { "aria-label": strings.select_action, children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "h5", children: actions.length ? strings.configure_next_action : strings.select_action }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 172,
+        lineNumber: 176,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("p", { className: "text-muted small", children: strings.pickaction_help || "" }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 175,
+        lineNumber: 179,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV(ActionCards, { catalog, strings, onPick: setPickType }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 176,
+        lineNumber: 180,
         columnNumber: 21
       }, this),
       !actions.length ? /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-link mt-3 px-0", onClick: onBack, children: strings.back }, void 0, false, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 178,
+        lineNumber: 182,
         columnNumber: 25
       }, this) : null
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-      lineNumber: 171,
+      lineNumber: 175,
       columnNumber: 17
     }, this) : /* @__PURE__ */ jsxDEV("section", { className: "card border-primary", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "card-header d-flex justify-content-between align-items-center gap-2", children: [
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("h4", { className: "h5 mb-0", children: strings.configure_action || strings.configure_next_action }, void 0, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 187,
+            lineNumber: 191,
             columnNumber: 29
           }, this),
           pickedName ? /* @__PURE__ */ jsxDEV("div", { className: "small text-muted", children: pickedName }, void 0, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 188,
+            lineNumber: 192,
             columnNumber: 43
           }, this) : null
         ] }, void 0, true, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 186,
+          lineNumber: 190,
           columnNumber: 25
         }, this),
         /* @__PURE__ */ jsxDEV(
@@ -281,21 +283,21 @@ function ActionsStep({
           false,
           {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 190,
+            lineNumber: 194,
             columnNumber: 25
           },
           this
         )
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 185,
+        lineNumber: 189,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("div", { className: "card-body", children: [
         loadError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-danger", role: "alert", children: [
           /* @__PURE__ */ jsxDEV("p", { className: "mb-2", children: loadError }, void 0, false, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 207,
+            lineNumber: 211,
             columnNumber: 33
           }, this),
           /* @__PURE__ */ jsxDEV(
@@ -310,24 +312,24 @@ function ActionsStep({
             false,
             {
               fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-              lineNumber: 208,
+              lineNumber: 212,
               columnNumber: 33
             },
             this
           )
         ] }, void 0, true, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 206,
+          lineNumber: 210,
           columnNumber: 29
         }, this) : null,
         busy && !schema ? /* @__PURE__ */ jsxDEV("p", { className: "text-muted mb-0", children: strings.loading_editor || "\u2026" }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 218,
+          lineNumber: 222,
           columnNumber: 29
         }, this) : null,
         formError ? /* @__PURE__ */ jsxDEV("div", { className: "alert alert-warning", role: "alert", children: formError }, void 0, false, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 220,
+          lineNumber: 224,
           columnNumber: 38
         }, this) : null,
         schema ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
@@ -348,7 +350,7 @@ function ActionsStep({
             false,
             {
               fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-              lineNumber: 223,
+              lineNumber: 227,
               columnNumber: 33
             },
             this
@@ -367,7 +369,7 @@ function ActionsStep({
               false,
               {
                 fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-                lineNumber: 235,
+                lineNumber: 239,
                 columnNumber: 37
               },
               this
@@ -385,34 +387,34 @@ function ActionsStep({
               false,
               {
                 fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-                lineNumber: 244,
+                lineNumber: 248,
                 columnNumber: 41
               },
               this
             ) : null
           ] }, void 0, true, {
             fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-            lineNumber: 234,
+            lineNumber: 238,
             columnNumber: 33
           }, this)
         ] }, void 0, true, {
           fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-          lineNumber: 222,
+          lineNumber: 226,
           columnNumber: 29
         }, this) : null
       ] }, void 0, true, {
         fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-        lineNumber: 204,
+        lineNumber: 208,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-      lineNumber: 184,
+      lineNumber: 188,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "public/admin/tool/murules/js/esm/src/components/ActionsStep.tsx",
-    lineNumber: 120,
+    lineNumber: 124,
     columnNumber: 9
   }, this);
 }

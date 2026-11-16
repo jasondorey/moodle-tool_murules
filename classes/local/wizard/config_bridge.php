@@ -175,6 +175,7 @@ final class config_bridge {
             'relation_supervisor' => ['frameworkid' => 'rv_frameworkid'],
             'tenant_member' => ['tenantid' => 'tm_tenantid'],
             'tenant_not_member' => ['tenantid' => 'tnm_tenantid'],
+            'user_first_auth_tenant' => ['tenantid' => 'ufat_tenantid'],
             default => [],
         };
     }

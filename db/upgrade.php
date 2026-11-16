@@ -250,5 +250,11 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111600, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111601) {
+        // Authentication category + user_first_auth_tenant; tenant_member also
+        // listens to user_created and is scheduled (MW-28 membership-without-allocate).
+        upgrade_plugin_savepoint(true, 2026111601, 'tool', 'murules');
+    }
+
     return true;
 }

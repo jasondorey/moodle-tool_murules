@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_murules';
-$plugin->version   = 2026111600;
+$plugin->version   = 2026111601;
 $plugin->requires  = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.6.4-enrolCourse';
+$plugin->release   = '0.6.5-authTenant';
 
 $plugin->dependencies = [
     'tool_muprog' => 2026111253,

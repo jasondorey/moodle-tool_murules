@@ -79,6 +79,38 @@ final class wizard_bridge_test extends \advanced_testcase {
         $this->assertArrayHasKey('courseid', $schema['defaults']);
     }
 
+    public function test_condition_schema_user_first_auth_tenant_when_available(): void {
+        $this->resetAfterTest();
+        $condition = \tool_murules\local\registry::get_condition('user_first_auth_tenant');
+        $this->assertNotNull($condition);
+        $this->assertSame('authentication', $condition->get_category());
+        $this->assertContains(
+            \core\event\user_loggedin::class,
+            $condition->get_events()
+        );
+        if (!$condition->is_available()) {
+            $this->markTestSkipped('MuTMS tenancy inactive or no tenants — schema still registered.');
+        }
+        $schema = field_schemas::for_type('condition', 'user_first_auth_tenant');
+        $names = array_column($schema['fields'], 'name');
+        $this->assertContains('tenantid', $names);
+        $bad = config_bridge::validate_and_extract('condition', 'user_first_auth_tenant', [
+            'tenantid' => 0,
+        ]);
+        $this->assertFalse($bad['ok']);
+        $this->assertArrayHasKey('tenantid', $bad['errors']);
+    }
+
+    public function test_tenant_member_listens_to_user_created_and_is_scheduled(): void {
+        $this->resetAfterTest();
+        $condition = \tool_murules\local\registry::get_condition('tenant_member');
+        $this->assertNotNull($condition);
+        $events = $condition->get_events();
+        $this->assertContains(\tool_mutenancy\event\user_allocated::class, $events);
+        $this->assertContains(\core\event\user_created::class, $events);
+        $this->assertTrue($condition->is_scheduled());
+    }
+
     public function test_validate_time_window_amount(): void {
         $this->resetAfterTest();
         $bad = config_bridge::validate_and_extract('condition', 'user_created_since', [

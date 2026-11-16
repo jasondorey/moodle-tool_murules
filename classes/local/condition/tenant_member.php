@@ -48,7 +48,14 @@ class tenant_member extends base {
     public function get_events(): array {
         return [
             \tool_mutenancy\event\user_allocated::class,
+            // Member create / auth-stamped tenantid fire user_created only (no allocate).
+            \core\event\user_created::class,
         ];
+    }
+
+    public function is_scheduled(): bool {
+        // Safety net for membership paths that miss allocate/create observers.
+        return true;
     }
 
     public function is_available(): bool {

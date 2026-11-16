@@ -221,7 +221,7 @@ final class field_schemas {
                 ],
                 'defaults' => ['frameworkid' => 0],
             ],
-            'tenant_member', 'tenant_not_member' => [
+            'tenant_member', 'tenant_not_member', 'user_first_auth_tenant' => [
                 'fields' => [
                     self::select_field('tenantid', get_string('tenant', 'tool_murules'), self::tenant_options(), true),
                 ],

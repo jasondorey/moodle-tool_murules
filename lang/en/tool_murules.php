@@ -204,6 +204,7 @@ $string['category_enrollment'] = 'Enrollments';
 $string['category_course'] = 'Courses';
 $string['category_activity'] = 'Activities & quizzes';
 $string['category_user'] = 'Users';
+$string['category_authentication'] = 'Authentication';
 $string['category_cohort'] = 'Cohorts';
 $string['category_competency'] = 'Competencies';
 $string['category_program'] = 'Programs';
@@ -383,6 +384,9 @@ $string['condition:tenant_member'] = 'User allocated to tenant';
 $string['condition:tenant_member_desc'] = 'User allocated to tenant "{$a->tenant}"';
 $string['condition:tenant_not_member'] = 'User not allocated to tenant';
 $string['condition:tenant_not_member_desc'] = 'User not allocated to tenant "{$a->tenant}"';
+$string['condition:user_first_auth_tenant'] = 'User first authenticated to tenant';
+$string['condition:user_first_auth_tenant_desc'] = 'User first authenticated to tenant "{$a->tenant}"';
+$string['condition:user_first_auth_tenant_help'] = 'Matches when a user belongs to the selected tenant and has completed a real login (SSO or local). Differs from “User allocated to tenant”, which reacts to tenancy allocation or create-as-member without requiring login.';
 
 $string['action:allocate_muprog'] = 'Allocate to program';
 $string['action:allocate_muprog_desc'] = 'Allocate to program "{$a}" (manual source)';
