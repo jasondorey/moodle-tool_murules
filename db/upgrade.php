@@ -256,5 +256,10 @@ function xmldb_tool_murules_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111601, 'tool', 'murules');
     }
 
+    if ($oldversion < 2026111700) {
+        // Once-ever: skip rematch/logging for users with prior applied matches (cron spam fix).
+        upgrade_plugin_savepoint(true, 2026111700, 'tool', 'murules');
+    }
+
     return true;
 }

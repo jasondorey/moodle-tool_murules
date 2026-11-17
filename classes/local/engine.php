@@ -149,6 +149,14 @@ final class engine {
             return [self::log_only_result('skipped', get_string('reason_outside_window', 'tool_murules'))];
         }
 
+        // Once-ever: if this user already has any prior applied match for the rule
+        // (from an earlier run), skip rematch work and do not write new log rows.
+        // Snapshot is taken before this call's actions run so multi-action first apply
+        // still executes every action in the same pass. Failed-only rows may still retry.
+        if (self::user_has_prior_applied_once_ever($rulerec, $userid)) {
+            return [];
+        }
+
         $conditions = rule::get_conditions_decoded($rulerec);
         if (!$conditions) {
             self::disable_broken_rule($rulerec);
@@ -200,16 +208,32 @@ final class engine {
             return 0;
         }
         $limit = self::max_backfill_batch();
-        $userids = $primary->get_matching_user_ids($conditions[0]['conditionconfig'], $limit, $fromuserid);
-        $last = $fromuserid;
-        foreach ($userids as $userid) {
-            $last = (int)$userid;
-            self::apply_rule_to_user($rulerec, $last, null);
+        // Over-fetch when once-ever so already-applied users don't starve the batch.
+        $fetch = $limit;
+        if (self::is_once_ever($rulerec)) {
+            $fetch = min($limit * 5, max($limit, 1000));
+        }
+        $rawids = $primary->get_matching_user_ids($conditions[0]['conditionconfig'], $fetch, $fromuserid);
+        if (!$rawids) {
+            return 0;
+        }
+        $lastseen = (int)end($rawids);
+        $candidates = self::filter_once_ever_candidates($rulerec, $rawids);
+        $processed = 0;
+        foreach ($candidates as $userid) {
+            $userid = (int)$userid;
+            self::apply_rule_to_user($rulerec, $userid, null);
+            $processed++;
+            if ($processed >= $limit) {
+                self::queue_backfill($ruleid, $userid);
+                return $userid;
+            }
         }
 
-        if (count($userids) >= $limit) {
-            self::queue_backfill($ruleid, $last);
-            return $last;
+        // Exhausted this fetch window; continue if the primary condition still has more users.
+        if (count($rawids) >= $fetch) {
+            self::queue_backfill($ruleid, $lastseen);
+            return $lastseen;
         }
         return 0;
     }
@@ -343,12 +367,8 @@ final class engine {
         global $DB;
 
         if (self::action_limit_blocks($rulerec, $actionrec, $userid)) {
-            $result = [
-                'status' => 'skipped',
-                'reason' => get_string('reason_already_applied', 'tool_murules'),
-            ];
-            self::write_match($rulerec, $actionrec, $userid, $result);
-            return $result;
+            // Silent skip: do not insert another "Already applied" log row.
+            return self::log_only_result('skipped', get_string('reason_already_applied', 'tool_murules'));
         }
 
         $action = registry::get_action($actionrec->actiontype);
@@ -377,26 +397,81 @@ final class engine {
 
     /**
      * @param stdClass $rulerec
+     * @return bool
+     */
+    protected static function is_once_ever(stdClass $rulerec): bool {
+        return ($rulerec->actionlimit ?? 'once') === 'once';
+    }
+
+    /**
+     * True when once-ever and the user already has an applied match for this rule.
+     *
+     * @param stdClass $rulerec
+     * @param int $userid
+     * @return bool
+     */
+    protected static function user_has_prior_applied_once_ever(stdClass $rulerec, int $userid): bool {
+        global $DB;
+        if (!self::is_once_ever($rulerec)) {
+            return false;
+        }
+        return $DB->record_exists('tool_murules_match', [
+            'ruleid' => (int)$rulerec->id,
+            'userid' => $userid,
+            'status' => 'applied',
+        ]);
+    }
+
+    /**
+     * Drop candidates who already have an applied match for this once-ever rule.
+     *
+     * @param stdClass $rulerec
+     * @param int[] $userids
+     * @return int[]
+     */
+    protected static function filter_once_ever_candidates(stdClass $rulerec, array $userids): array {
+        global $DB;
+        if (!self::is_once_ever($rulerec) || !$userids) {
+            return $userids;
+        }
+
+        $userids = array_values(array_map('intval', $userids));
+        [$uinsql, $uparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'uid');
+        $params = array_merge($uparams, ['ruleid' => (int)$rulerec->id]);
+        $sql = "SELECT DISTINCT userid
+                  FROM {tool_murules_match}
+                 WHERE ruleid = :ruleid
+                   AND status = 'applied'
+                   AND userid $uinsql";
+        $done = $DB->get_records_sql($sql, $params);
+        if (!$done) {
+            return $userids;
+        }
+        $doneflip = array_flip(array_map('intval', array_keys($done)));
+        return array_values(array_filter(
+            $userids,
+            static fn(int $id): bool => !isset($doneflip[$id])
+        ));
+    }
+
+    /**
+     * @param stdClass $rulerec
      * @param stdClass $actionrec
      * @param int $userid
      * @return bool true if blocked
      */
     protected static function action_limit_blocks(stdClass $rulerec, stdClass $actionrec, int $userid): bool {
         global $DB;
-        $limit = $rulerec->actionlimit ?? 'once';
-        if ($limit === 'none') {
+        if (!self::is_once_ever($rulerec)) {
             return false;
         }
-        // Wave A: once-ever = any prior applied row for this rule+action+user.
-        if ($limit === 'once') {
-            return $DB->record_exists('tool_murules_match', [
-                'ruleid' => $rulerec->id,
-                'actionid' => $actionrec->id,
-                'userid' => $userid,
-                'status' => 'applied',
-            ]);
-        }
-        return false;
+        // Safety net when early rule-level skip did not run: prior applied for this action.
+        return $DB->record_exists('tool_murules_match', [
+            'ruleid' => $rulerec->id,
+            'actionid' => $actionrec->id,
+            'userid' => $userid,
+            'status' => 'applied',
+        ]);
     }
 
     /**
