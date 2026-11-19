@@ -29,6 +29,25 @@ Admin UI: **Site administration → Programs → Rules**.
 - Event observers + scheduled scan for negative / time-window conditions
 - Match log with apply / skip / fail; global kill-switch
 
+## Included languages
+
+Packs shipped with the plugin. English (`en`) is the source of truth: if a string is missing from another pack, Moodle falls back to English.
+
+- `en` English
+- `es` Spanish
+- `fr` French
+- `de` German
+- `it` Italian
+- `ar` Arabic
+- `zh_cn` Chinese (simplified)
+- `zh_tw` Chinese (traditional)
+- `th` Thai
+- `vi` Vietnamese
+- `ms` Malaysian
+- `ja` Japanese
+- `ko` Korean
+- `id` Indonesian
+
 ## License
 
 GNU GPL v3 or later — see [LICENSE](LICENSE).
